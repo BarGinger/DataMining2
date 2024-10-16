@@ -1,0 +1,19 @@
+	Model	Metric	Value
+0	Single Tree	Accuracy	0.783661119515885
+1	Bagging Tree	Accuracy	0.8154311649016641
+2	Random Forests	Accuracy	0.7866868381240545
+3	Single Tree	Precision	0.6634615384615384
+4	Bagging Tree	Precision	0.7696969696969697
+5	Random Forests	Precision	0.7083333333333334
+6	Single Tree	Recall	0.6540284360189573
+7	Bagging Tree	Recall	0.6018957345971564
+8	Random Forests	Recall	0.5639810426540285
+9	Single Tree	Specificity	0.8444444444444444
+10	Bagging Tree	Specificity	0.9155555555555556
+11	Random Forests	Specificity	0.8911111111111111
+12	Single Tree	f1	0.6587112171837709
+13	Bagging Tree	f1	0.675531914893617
+14	Random Forests	f1	0.6279683377308708
+15	Single Tree	roc_auc	0.7492364402317009
+16	Bagging Tree	roc_auc	0.758725645076356
+17	Random Forests	roc_auc	0.7275460768825698
