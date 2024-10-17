@@ -28,7 +28,7 @@ class FAKE(Enum):
     DECEPTIVE = 1
 
 
-def read_csv_from_zip(zip_file_path: str) -> pd.DataFrame:
+def read_zip(zip_file_path: str) -> pd.DataFrame:
     """
         Read the csv of the data from the given zip file path
         @param zip_file_path: path to the zip file
@@ -148,9 +148,9 @@ def compute_metrics(y_true, y_pred, title=""):
 
 
 def get_df():
-    df = read_csv_from_zip("../Data/op_spam_v1.4.zip")
-    df_positive = df[df[type] == REVIEW_TYPE.POSITIVE]
-    df_negative = df[df[type] == REVIEW_TYPE.NEGATIVE]
+    df = read_zip("../Data/op_spam_v1.4.zip")
+    df_positive = df[df['type'] == REVIEW_TYPE.POSITIVE]
+    df_negative = df[df['type'] == REVIEW_TYPE.NEGATIVE]
     return df_positive, df_negative
 
 
