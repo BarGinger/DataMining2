@@ -17,6 +17,16 @@ from tabulate import tabulate
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from enum import Enum
+
+class REVIEW_TYPE(Enum):
+    POSITIVE = 0
+    NEGATIVE = 1
+
+class FAKE(Enum):
+    TRUTHFUL = 0
+    DECEPTIVE = 1
+
 
 def read_csv_from_zip(zip_file_path: str) -> pd.DataFrame:
     """
@@ -28,16 +38,35 @@ def read_csv_from_zip(zip_file_path: str) -> pd.DataFrame:
     with zipfile.ZipFile(zip_file_path, 'r') as zip_file:
         # Iterate over each file in the zip archive
         for file_info in zip_file.infolist():
-            if file_info.filename.endswith('.csv'):  # Check if file is CSV
+            if file_info.filename.endswith('.txt'):  # Check if file is CSV
                 # Open the file within the zip archive
-                with zip_file.open(file_info.filename) as csv_file:
+                with zip_file.open(file_info.filename) as txt_file:
                     # Convert the binary stream to text and then read it with pandas
-                    text_stream = TextIOWrapper(csv_file, encoding='utf-8')
-                    # Specify the delimiter as ';'
-                    df = pd.read_csv(text_stream, sep=';')
-                    # Add a new column with the filename
-                    df['__filename__'] = file_info.filename
+                    text_stream = TextIOWrapper(txt_file, encoding='utf-8')
+                    text = text_stream.read()
+                    review_type = REVIEW_TYPE.POSITIVE
+                    is_fake = FAKE.TRUTHFUL
+                    if "negative" in file_info.filename:
+                        review_type = REVIEW_TYPE.NEGATIVE
+                    else: # positive
+                        review_type = REVIEW_TYPE.POSITIVE
+
+                    if "deceptive" in file_info.filename:
+                        is_fake = FAKE.DECEPTIVE
+                    else:  # truthful
+                        is_fake = FAKE.TRUTHFUL
+
+                    # Create DataFrame and append to dfs list
+                    df = pd.DataFrame.from_dict(
+                        {
+                            "__filename__": [file_info.filename],
+                            "type": [review_type],
+                            "is_fake": [is_fake],
+                            "review": [text]
+                        }
+                    )
                     dfs.append(df.reset_index(drop=True))
+
     # Concatenate all DataFrames into a single DataFrame
     result_df = pd.concat(dfs)
     return result_df
@@ -118,11 +147,13 @@ def compute_metrics(y_true, y_pred, title=""):
     return df_metrics, df_cm
 
 
+def get_df():
+    df = read_csv_from_zip("../Data/op_spam_v1.4.zip")
+    df_positive = df[df[type] == REVIEW_TYPE.POSITIVE]
+    df_negative = df[df[type] == REVIEW_TYPE.NEGATIVE]
+    return df_positive, df_negative
+
+
 if __name__ == "__main__":
-    df = read_csv_from_zip("Data/op_spam_v1.4.zip")
-    # df_train = df[df['__filename__'] == 'eclipse-metrics-packages-2.0.csv']
-    # X_train, Y_train, columns_train = get_x_y(df_train)
-    # df_test = df[df['__filename__'] == 'eclipse-metrics-packages-3.0.csv']
-    # X_test, Y_test, columns_test = get_x_y(df_test)
 
     print("Done!")
