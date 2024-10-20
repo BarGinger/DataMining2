@@ -72,83 +72,83 @@ def read_zip(zip_file_path: str) -> pd.DataFrame:
     return result_df
 
 
-def compute_metrics(y_true, y_pred, title=""):
-    """
-        Compute the quality metrics for given predicted value compared to true labels.
-        @param y_true: true labels
-        @param y_pred: predicted values
-        @param title: title for file to save results
-        @:return the calculated metrics
-        """
-    # Accuracy
-    accuracy = accuracy_score(y_true, y_pred)
+# def compute_metrics(y_true, y_pred, title=""):
+#     """
+#         Compute the quality metrics for given predicted value compared to true labels.
+#         @param y_true: true labels
+#         @param y_pred: predicted values
+#         @param title: title for file to save results
+#         @:return the calculated metrics
+#         """
+#     # Accuracy
+#     accuracy = accuracy_score(y_true, y_pred)
 
-    # Precision
-    precision = precision_score(y_true, y_pred)
+#     # Precision
+#     precision = precision_score(y_true, y_pred)
 
-    # Recall
-    recall = recall_score(y_true, y_pred)
+#     # Recall
+#     recall = recall_score(y_true, y_pred)
 
-    # F1 Score
-    f1 = f1_score(y_true, y_pred)
+#     # F1 Score
+#     f1 = f1_score(y_true, y_pred)
 
-    # ROC Curve and AUC
-    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
-    roc_auc = auc(fpr, tpr)
+#     # ROC Curve and AUC
+#     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+#     roc_auc = auc(fpr, tpr)
 
-    confusion_matrix_data = confusion_matrix(y_true=y_true, y_pred=y_pred)
+#     confusion_matrix_data = confusion_matrix(y_true=y_true, y_pred=y_pred)
 
-    specificity = confusion_matrix_data[0, 0] / (confusion_matrix_data[0, 0] + confusion_matrix_data[0, 1])
+#     specificity = confusion_matrix_data[0, 0] / (confusion_matrix_data[0, 0] + confusion_matrix_data[0, 1])
 
-    # df_metrics = classification_report(y_true=y_true, y_pred=y_pred)
+#     # df_metrics = classification_report(y_true=y_true, y_pred=y_pred)
 
-    df_metrics = {
-        "Accuracy": accuracy,
-        "Precision": precision,
-        "Recall": recall,
-        "Specificity": specificity,
-        "f1": f1,
-        "roc_auc": roc_auc
-    }
-    df_metrics = pd.DataFrame([df_metrics])
-    result_txt = f"Output/{title}_results.txt"
-    plot_title = f"Confusion Matrix for {title}"
+#     df_metrics = {
+#         "Accuracy": accuracy,
+#         "Precision": precision,
+#         "Recall": recall,
+#         "Specificity": specificity,
+#         "f1": f1,
+#         "roc_auc": roc_auc
+#     }
+#     df_metrics = pd.DataFrame([df_metrics])
+#     result_txt = f"Output/{title}_results.txt"
+#     plot_title = f"Confusion Matrix for {title}"
 
-    with open(result_txt, "w") as file:
-        file.write(f"Requested quality measures results for - {title}: \n")
-        file.write(tabulate(df_metrics, headers='keys', tablefmt='psql'))
-        file.write("\n" + plot_title + ":\n")
-        np.savetxt(file, confusion_matrix_data, fmt='%d')
+#     with open(result_txt, "w") as file:
+#         file.write(f"Requested quality measures results for - {title}: \n")
+#         file.write(tabulate(df_metrics, headers='keys', tablefmt='psql'))
+#         file.write("\n" + plot_title + ":\n")
+#         np.savetxt(file, confusion_matrix_data, fmt='%d')
 
-    print(f"Requested quality measures results for - {title}: \n")
-    print(tabulate(df_metrics, headers='keys', tablefmt='psql'))
+#     print(f"Requested quality measures results for - {title}: \n")
+#     print(tabulate(df_metrics, headers='keys', tablefmt='psql'))
 
-    print(f"Requested quality measures results for - {title}: \n")
-    print(tabulate(df_metrics, headers='keys', tablefmt='psql'))
-    print(plot_title + ":")
-    print(confusion_matrix_data)
-    cm_len = len(confusion_matrix_data)
-    df_cm = pd.DataFrame(confusion_matrix_data, index=range(0, cm_len), columns=range(0, cm_len))
-    group_names = ['True Negative', 'False Positive', 'False Negative', 'True Positive']
-    group_counts = ["{0: 0.0f}".format(value) for value in confusion_matrix_data.flatten()]
-    group_percentages = ['{0:.2%}'.format(value)
-                         for value in confusion_matrix_data.flatten() / np.sum(confusion_matrix_data)]
-    labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in zip(group_names, group_counts, group_percentages)]
-    labels = np.asarray(labels).reshape(2, 2)
+#     print(f"Requested quality measures results for - {title}: \n")
+#     print(tabulate(df_metrics, headers='keys', tablefmt='psql'))
+#     print(plot_title + ":")
+#     print(confusion_matrix_data)
+#     cm_len = len(confusion_matrix_data)
+#     df_cm = pd.DataFrame(confusion_matrix_data, index=range(0, cm_len), columns=range(0, cm_len))
+#     group_names = ['True Negative', 'False Positive', 'False Negative', 'True Positive']
+#     group_counts = ["{0: 0.0f}".format(value) for value in confusion_matrix_data.flatten()]
+#     group_percentages = ['{0:.2%}'.format(value)
+#                          for value in confusion_matrix_data.flatten() / np.sum(confusion_matrix_data)]
+#     labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in zip(group_names, group_counts, group_percentages)]
+#     labels = np.asarray(labels).reshape(2, 2)
 
-    sns.set(font_scale=1.2)  # Increase font size
-    sns.heatmap(df_cm, annot=labels, fmt='', cmap='Blues', cbar=False,
-                annot_kws={"size": 14, "fontweight": "bold"})  # Adjust font properties
-    plt.title(plot_title, fontsize=16, fontweight='bold')  # Make title bold and larger
-    file_name = f"Output/{title}_confusion_matrix.png"
-    plt.savefig(file_name, dpi=450)
-    plt.show()
+#     sns.set(font_scale=1.2)  # Increase font size
+#     sns.heatmap(df_cm, annot=labels, fmt='', cmap='Blues', cbar=False,
+#                 annot_kws={"size": 14, "fontweight": "bold"})  # Adjust font properties
+#     plt.title(plot_title, fontsize=16, fontweight='bold')  # Make title bold and larger
+#     file_name = f"Output/{title}_confusion_matrix.png"
+#     plt.savefig(file_name, dpi=450)
+#     plt.show()
 
-    return df_metrics, df_cm
+#     return df_metrics, df_cm
 
 
 def get_df():
-    df = read_zip("../Data/op_spam_v1.4.zip")
+    df = read_zip(r"C:\UU\DataMining2\Data\op_spam_v1.4.zip")
     df_positive = df[df['type'] == REVIEW_TYPE.POSITIVE]
     df_negative = df[df['type'] == REVIEW_TYPE.NEGATIVE]
     return df_positive, df_negative
