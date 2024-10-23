@@ -11,7 +11,7 @@ class Logreg:
     def __init__(self):
         self.vectorizer = None
         # Logistic Regression with L1 penalty (Lasso)
-        self.model = Logreg(penalty='l1', solver='liblinear', random_state=42)
+        self.model = LogisticRegression(penalty='l1', solver='liblinear', random_state=42)
 
     # Feature Extraction: Unigram and Bigram features
     def extraction(self, X_train, X_test, ngram_range=(1, 1)):
@@ -43,9 +43,7 @@ class Logreg:
             for index in top_indices:
                 print(f"{feature_names[index]}: {coefficients[index]}")
 
-    def run(self, df_positive, df_negative):
-        # Load dataset
-        df = pd.concat([df_positive, df_negative])
+    def run(self, df):
         X = df['review']
         
         # Convert 'is_fake' from FAKE Enum to integers
@@ -76,10 +74,10 @@ class Logreg:
 
 if __name__ == "__main__":
     # Load the dataset from the get_df function
-    df_positive, df_negative = get_df()
+    df = get_df()
 
     # Initialize and run the DecisionTreeModel
     log_model = Logreg()
-    log_model.run(df_positive, df_negative)
+    log_model.run(df)
 
     print("Done!")
