@@ -48,9 +48,7 @@ class RandomForestModel:
             print("Top features for the random forest:")
             print(feature_names[top_indices])
 
-    def run(self, df_positive, df_negative):
-        # Load dataset
-        df = pd.concat([df_positive, df_negative])
+    def run(self, df):
         X = df['review']
         
         # Convert 'is_fake' from FAKE Enum to integers
@@ -69,8 +67,7 @@ class RandomForestModel:
         # Final Evaluation on Test Set
         self.evaluate_model_test(X_train_uni, X_test_uni, y_train, y_test)
 
-        # Get top features 
-        print("\nTop features for the Random Forest:")
+        # Get top features
         self.get_top_features()
 
         # Run for Bigrams
@@ -86,10 +83,10 @@ class RandomForestModel:
 
 if __name__ == "__main__":
     # Load the dataset from the get_df function
-    df_positive, df_negative = get_df()
+    df = get_df()
 
     # Initialize and run the RandomForestModel
     rf_model = RandomForestModel()
-    rf_model.run(df_positive, df_negative)
+    rf_model.run(df)
 
     print("Done!")

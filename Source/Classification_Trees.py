@@ -41,9 +41,7 @@ class DecisionTreeModel:
             print("Top features for the classification tree:")
             print(feature_names[top_indices])
 
-    def run(self, df_positive, df_negative):
-        # Load dataset
-        df = pd.concat([df_positive, df_negative])
+    def run(self, df):
         X = df['review']
         
         # Convert 'is_fake' from FAKE Enum to integers
@@ -69,10 +67,10 @@ class DecisionTreeModel:
 
 if __name__ == "__main__":
     # Load the dataset from the get_df function
-    df_positive, df_negative = get_df()
+    df = get_df()
 
     # Initialize and run the DecisionTreeModel
     dt_model = DecisionTreeModel()
-    dt_model.run(df_positive, df_negative)
+    dt_model.run(df)
 
     print("Done!")
