@@ -4,7 +4,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.linear_model import LogisticRegression
-from main import get_df
 
 
 class Logreg:
@@ -70,6 +69,34 @@ class Logreg:
         print("\nTop features for Logistic Regression with Lasso (Bigrams):")
         self.get_top_features()
 
+def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
+    """
+    Run the current model with the given train and test sets
+
+    Parameters:
+    -----------
+    dataset_name : str
+            The name of the given dataset (unigrams or bigrams)
+    X_train : array-like of shape (n_samples, n_features)
+        The training input samples.
+    y_train : array-like of shape (n_samples,)
+        The target values.
+    X_test : array-like of shape (n_samples, n_features)
+        The test input samples.
+    y_test : array-like of shape (n_samples,)
+        The target values of the test set.
+
+    Returns:
+    --------
+    df_evaluation : dataframe
+        A dataframe with the evaluation scores and needed info for further analysis
+    """
+    # todo adopt this
+    # Initialize and run the DecisionTreeModel
+    log_model = Logreg()
+    log_model.run(df)
+
+    print("Done!")
 
 
 if __name__ == "__main__":

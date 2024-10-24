@@ -4,7 +4,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
-from main import get_df
 
 
 class RandomForestModel:
@@ -80,6 +79,33 @@ class RandomForestModel:
         # Final Evaluation on Test Set with Bigrams
         self.evaluate_model_test(X_train_bi, X_test_bi, y_train, y_test)
 
+def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
+    """
+    Run the current model with the given train and test sets
+
+    Parameters:
+    -----------
+    dataset_name : str
+            The name of the given dataset (unigrams or bigrams)
+    X_train : array-like of shape (n_samples, n_features)
+        The training input samples.
+    y_train : array-like of shape (n_samples,)
+        The target values.
+    X_test : array-like of shape (n_samples, n_features)
+        The test input samples.
+    y_test : array-like of shape (n_samples,)
+        The target values of the test set.
+
+    Returns:
+    --------
+    df_evaluation : dataframe
+        A dataframe with the evaluation scores and needed info for further analysis
+    """
+    # todo adopt this
+    rf_model = RandomForestModel()
+    rf_model.run(df)
+
+    print("Done!")
 
 if __name__ == "__main__":
     # Load the dataset from the get_df function
