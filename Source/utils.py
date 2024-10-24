@@ -58,7 +58,7 @@ def calculate_scores(y_true, y_pred):
     """
     scores = {
         'accuracy': accuracy_score(y_true, y_pred),
-        'precision': precision_score(y_true, y_pred),
+        'precision': precision_score(y_true, y_pred, zero_division=1),
         'recall': recall_score(y_true, y_pred),
         'f1': f1_score(y_true, y_pred)
     }
@@ -146,7 +146,8 @@ def extract_features(df, use_bigrams=False):
         - Target vector y
         - Vectorizer for future analysis.
     """
-    vectorizer = CountVectorizer(ngram_range=(1, 2) if use_bigrams else (1, 1), stop_words='english')
+    # we use stop_words = None because reviews were already preprocessed
+    vectorizer = CountVectorizer(ngram_range=(2, 2) if use_bigrams else (1, 1), stop_words=None)
     X = vectorizer.fit_transform(df['review'])  # Use the preprocessed text column
     # Convert 'is_fake' from FAKE Enum to integers
     y = df['is_fake'].apply(lambda x: 1 if x.name == "DECEPTIVE" else 0)
@@ -177,6 +178,28 @@ def split_into_train_test(X, y):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     return X_train, X_test, y_train.to_numpy(), y_test.to_numpy()
 
+
+def get_feature_range(total_features):
+    initial_round_numbers = [10, 15, 25, 50, 100, 250, 500, 1000]
+    step_size = 1000
+
+    # Start with the initial round numbers
+    feature_range = initial_round_numbers.copy()
+
+    # Add values in steps of 500 until reaching the total number of features
+    current_value = 1000
+    while current_value + step_size <= total_features and current_value < 5000:
+        current_value += step_size
+        feature_range.append(current_value)
+
+    # Ensure the last value is the total number of features
+    if feature_range[-1] != total_features:
+        feature_range.append(total_features)
+
+    # Filter out any values that are higher than the total number of features
+    feature_range = [value for value in feature_range if value <= total_features]
+
+    return feature_range
 
 def get_top_features(X, y, k=100):
     """

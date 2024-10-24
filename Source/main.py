@@ -66,18 +66,21 @@ def clean_text(text):
     text = re.sub(r'\d+', '', text)       # Remove numbers
     text = " ".join([word for word in text.split() if word.isalpha()])  # Remove non-alphabetic characters
     text = re.sub(r'[^\w\s]', '', text)   # Remove punctuation
+
     return text.lower()
 
 
-def preprocess_text_batch(texts: list):
+def preprocess_text_batch(texts: list, hotel_names: list):
     """
     Preprocess a batch of texts using Named Entity Recognition (NER) and Part-of-Speech (POS) tagging
-    to remove proper nouns and named entities.
+    to remove proper nouns, named entities, and hotel names.
 
     Parameters:
     ----------
     texts : list
         A list of text strings to preprocess.
+    hotel_names : list
+        A list of hotel names to be removed from the reviews.
 
     Returns:
     -------
@@ -92,19 +95,35 @@ def preprocess_text_batch(texts: list):
         docs = nlp.pipe(cleaned_texts, batch_size=100, n_process=2)
 
     stop_words = set(stopwords.words('english'))
+    stop_words.update(spacy.lang.en.stop_words.STOP_WORDS)
     lemmatizer = WordNetLemmatizer()
 
-    for doc in docs:
-        # Remove tokens identified as proper nouns (PROPN)
+    for doc, hotel_name in zip(docs, hotel_names):
+        # Remove tokens identified as proper nouns (PROPN) and named entities (PERSON, GPE)
         cleaned_tokens = [
-            token.text for token in doc if not (token.pos_ in ["PROPN"])
+            token.text for token in doc
+            if not (token.pos_ in ["PROPN"] or token.ent_type_ in ["PERSON", "GPE"])
         ]
 
-        # Tokenization and stopword removal
-        tokens = [lemmatizer.lemmatize(token) for token in cleaned_tokens if token not in stop_words]
+        # Remove the hotel name if it exists in the tokens
+        cleaned_tokens = [token for token in cleaned_tokens if token.lower() != hotel_name.lower()]
+        # Stopword removal before lemmatization
+        tokens_without_stopwords = [token for token in cleaned_tokens if token not in stop_words]
+
+        # Lemmatization after stopword removal
+        lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens_without_stopwords]
+
+        # Remove tokens that may contain numbers or undesired patterns
+        lemmatized_tokens = [
+            token for token in lemmatized_tokens
+            if not re.fullmatch(r'\d+', token) and  # Remove tokens that are purely digits
+               not re.search(r'\bth\b', token) and  # Remove tokens like 'th'
+               not re.search(r'\d', token) and  # Remove tokens containing digits
+               len(token) > 1  # Remove single character tokens
+        ]
 
         # Join the tokens back into a string
-        preprocessed_text = ' '.join(tokens)
+        preprocessed_text = ' '.join(lemmatized_tokens)
         processed_texts.append(preprocessed_text)
 
     return processed_texts
@@ -127,6 +146,7 @@ def read_zip(zip_file_path: str) -> pd.DataFrame:
     texts = []
     labels = []
     filenames = []
+    hotel_names = []  # To store hotel names
 
     with zipfile.ZipFile(zip_file_path, 'r') as zip_file:
         for file_info in zip_file.infolist():
@@ -134,20 +154,22 @@ def read_zip(zip_file_path: str) -> pd.DataFrame:
                 with zip_file.open(file_info.filename) as txt_file:
                     # Determine if review is deceptive or truthful based on filename
                     if "negative" in file_info.filename:
+                        # Determine if review is deceptive or truthful based on filename
+                        is_fake = FAKE.DECEPTIVE if "deceptive" in file_info.filename else FAKE.TRUTHFUL
+                        # Extract hotel name from filename
+                        hotel_name = file_info.filename.split('/')[-1].split('_')[1]  # The hotel name is the second part
+                        hotel_names.append(hotel_name)
+
                         text_stream = TextIOWrapper(txt_file, encoding='utf-8')
                         text = text_stream.read()
                         texts.append(text)  # Collect all texts for batch processing
-                        is_fake = FAKE.DECEPTIVE if "deceptive" in file_info.filename else FAKE.TRUTHFUL
                         labels.append(is_fake)
                         filenames.append(file_info.filename)
 
-    # Batch preprocess all the collected texts
-    preprocessed_texts = preprocess_text_batch(texts)
+    # Batch preprocess all the collected texts along with their corresponding hotel names
+    preprocessed_texts = preprocess_text_batch(texts, hotel_names)
 
-    print(f"length of filenames: {len(filenames)}")
-    print(f"length of labels: {len(labels)}")
-    print(f"length of texts: {len(texts)}")
-    print(f"length of preprocessed_texts: {len(preprocessed_texts)}")
+    print(f"{len(preprocessed_texts)} reviews were preprocessed")
 
     # Create the final DataFrame
     df = pd.DataFrame({
@@ -168,8 +190,10 @@ def preprocess():
     pd.DataFrame
         A DataFrame containing the preprocessed data.
     """
+    print("Running preprocess ... this could take awhile so go and drink coffee")
     df = read_zip(r"..\Data\op_spam_v1.4.zip")
     df.to_csv(PREPROCESSED_FILENAME, index=False)
+    print(f"preprocess data was saved into the following file: {PREPROCESSED_FILENAME}")
     return df
 
 
@@ -237,18 +261,18 @@ def run_all_models():
 
     # iterate over all the models, for each one train and predict on unigrams and bigrams datasets
     models = [
-        {
-            "model_name": "Multinomial Naive Bayes",
-            "model_run_method": MNB.run_the_model
-        },
+        # {
+        #     "model_name": "Multinomial Naive Bayes",
+        #     "model_run_method": MNB.run_the_model
+        # },
         # {
         #     "model_name": "Logistic Regression with Lasso Penalty",
         #     "model_run_method": LR.run_the_model
         # },
-        # {
-        #     "model_name": "Classification Trees",
-        #     "model_run_method": CLT.run_the_model
-        # },
+        {
+            "model_name": "Classification Trees",
+            "model_run_method": CLT.run_the_model
+        },
         # {
         #     "model_name": "Random Forests",
         #     "model_run_method": RF.run_the_model
@@ -269,13 +293,18 @@ def run_all_models():
             model_run_method = model_info["model_run_method"]
             df_evaluation = model_run_method(dataset_name, *dataset)
             print(f"df_evaluation = {df_evaluation}")
-            df_evaluations = pd.concat([df_evaluations, df_evaluation], ignore_index=True)
+            if df_evaluations.empty:
+                df_evaluations = df_evaluation
+            else:
+                df_evaluations = pd.concat([df_evaluations, df_evaluation], ignore_index=True)
 
     df_evaluations.to_csv(EVALUATIONS_FILENAME, index=False)
+    print(f"df_evaluations was saved into {EVALUATIONS_FILENAME}")
+    print("Done with all models!")
 
 
 if __name__ == "__main__":
     # Uncomment to preprocess data before running models, we only need to run this once
     # preprocess()
     run_all_models()
-    print("Done with all models!")
+
