@@ -11,7 +11,7 @@ class DecisionTreeModel:
         self.vectorizer = None
         self.model = None
 
-    def train(self, X_train, y_train, alphas=[0.1, 0.5, 1.0], cv=5):
+    def train(self, X_train, y_train, alphas=np.arange(0, 15, 0.5), cv=5):
         """
         Trains the Decision Tree Classifier model using cross-validation to find the best alpha.
 
@@ -22,7 +22,7 @@ class DecisionTreeModel:
         y_train : array-like of shape (n_samples,)
             The target values.
         alphas : list, optional
-            The list of alpha values to try. Default is [0.1, 0.5, 1.0].
+            The list of alpha values to try. Default is [0.0, 0.001, 0.01, 0.1].
         cv : int, optional
             The number of cross-validation folds. Default is 5.
 
@@ -31,19 +31,22 @@ class DecisionTreeModel:
         None
         """
 
-        # Train the Multinomial Naive Bayes model using cross-validation to find the best alpha
+        # Define the hyperparameter grid
         param_grid = {
             'ccp_alpha': alphas,
-            'max_depth': [None, 10, 20, 30],
-            'min_samples_split': [2, 5, 10],
-            'min_samples_leaf': [1, 2, 4]
-        }  # Cross-validate over different alpha values and other hyper-parameters
-        grid = GridSearchCV(DecisionTreeClassifier(random_state=42), param_grid, cv=cv, scoring='accuracy')
+            'random_state': [42],
+            'max_depth': np.arange(10, 80, 10),
+            'min_samples_split': np.arange(10, 50, 5),
+            'min_samples_leaf': np.arange(5, 100, 5)
+        }
+
+        # Perform grid search with cross-validation
+        grid = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
         grid.fit(X_train, y_train)
 
         # Save the best model after cross-validation
         self.model = grid.best_estimator_
-        print(f"Best alpha: {self.model.ccp_alpha}")
+        print(f"Best ccp_alpha: {self.model.ccp_alpha}")
         print(f"Best max_depth: {self.model.max_depth}")
         print(f"Best min_samples_split: {self.model.min_samples_split}")
         print(f"Best min_samples_leaf: {self.model.min_samples_leaf}")
@@ -86,18 +89,22 @@ class DecisionTreeModel:
             A dictionary containing the top k features for each class.
         """
         if hasattr(self.model, 'feature_importances_'):
-            # Extract feature names
             feature_names = np.array(vectorizer.get_feature_names_out())
-            # Get feature importances from the model
             importances = self.model.feature_importances_
+            top_indices = np.argsort(importances)[-k:]
 
-            # Get the top k most important features
-            top_k_indices = np.argsort(importances)[-k:]  # Top k indices
-            top_k_features = feature_names[top_k_indices]
+            # Extract feature names
+            # feature_names = np.array(vectorizer.get_feature_names_out())
+            # # Get feature importances from the model
+            # importances = self.model.feature_importances_
+            #
+            # # Get the top k most important features
+            # top_k_indices = np.argsort(importances)[-k:]  # Top k indices
+            # top_k_features = feature_names[top_k_indices]
 
             return {
-                'deceptive': top_k_features,  # Example key: might need specific class labels
-                'truthful': top_k_features
+                'deceptive': feature_names[top_indices],  # Example key: might need specific class labels
+                'truthful': []#top_k_features
             }
         else:
             raise Exception("Model does not have feature importances. Make sure the model is trained.")
@@ -204,7 +211,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     """
     # todo adopt this
     model = DecisionTreeModel()
-    model.train(X_train, y_train, alphas=[0.1, 0.15, 0.25, 0.5, 0.75, 0.85, 1.0], cv=5)
+    model.train(X_train, y_train)
     # predict on given test set
     y_pred = model.predict(X_test)
     # Calculate scores

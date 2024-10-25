@@ -1,3 +1,3 @@
 model_name,dataset_name,accuracy,precision,recall,f1,top_5_features_deceptive,top_5_features_truthful,bottom_5_features_deceptive,bottom_5_features_truthful
-Decision Tree,unigrams,0.5,1.0,0.0,0.0,"yucky, yup, zest, zone, aaa","yucky, yup, zest, zone, aaa","yellow, yelp, yes, yesterday, yesteryear","yellow, yelp, yes, yesterday, yesteryear"
-Decision Tree,bigrams,0.5,1.0,0.0,0.0,"yup got, zest replaced, zone computer, zone plan, aaa membership","yup got, zest replaced, zone computer, zone plan, aaa membership","young honesty, young kid, young man, young manager, young people","young honesty, young kid, young man, young manager, young people"
+Decision Tree,unigrams,0.625,0.6162790697674418,0.6625,0.6385542168674698,"coffee, experience, location, smelled, finally",,"yucky, aaahed, aback, abassador, ability","yucky, aaahed, aback, abassador, ability"
+Decision Tree,bigrams,0.59375,0.6363636363636364,0.4375,0.5185185185185185,"recent stay, room smelled, finally got, took hour, recently stayed",,"aaa membership, aaahed picture, aback phone, abassador future, ability fully","aaa membership, aaahed picture, aback phone, abassador future, ability fully"
