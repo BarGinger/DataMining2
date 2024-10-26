@@ -237,4 +237,4 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     # Create DataFrame from the list of evaluations
     df_evaluations = pd.DataFrame(evaluations)
-    return  df_evaluations
+    return  df_evaluations, y_pred

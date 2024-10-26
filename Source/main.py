@@ -19,6 +19,7 @@ from enum import Enum
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from scipy.optimize import differential_evolution
+from mlxtend.evaluate import mcnemar, mcnemar_table
 
 import utils
 import Multinomial_Naive_Bayes as MNB
@@ -38,8 +39,8 @@ except OSError:
     download(model_name)
     nlp = spacy.load(model_name)
 
-PREPROCESSED_FILENAME = r"..\Data\preprocessed_df.csv"
-EVALUATIONS_FILENAME = r"..\Output\df_evaluations.csv"
+PREPROCESSED_FILENAME = r"C:\UU\DataMining2\Data\preprocessed_df.csv"
+EVALUATIONS_FILENAME = r"C:\UU\DataMining2\Output\df_evaluations.csv"
 
 
 class FAKE(Enum):
@@ -261,22 +262,22 @@ def run_all_models():
 
     # iterate over all the models, for each one train and predict on unigrams and bigrams datasets
     models = [
-        # {
-        #     "model_name": "Multinomial Naive Bayes",
-        #     "model_run_method": MNB.run_the_model
-        # },
-        # {
-        #     "model_name": "Logistic Regression with Lasso Penalty",
-        #     "model_run_method": LR.run_the_model
-        # },
+        {
+            "model_name": "Multinomial Naive Bayes",
+            "model_run_method": MNB.run_the_model
+        },
+        {
+            "model_name": "Logistic Regression with Lasso Penalty",
+            "model_run_method": LR.run_the_model
+        },
         {
             "model_name": "Classification Trees",
             "model_run_method": CLT.run_the_model
         },
-        # {
-        #     "model_name": "Random Forests",
-        #     "model_run_method": RF.run_the_model
-        # }
+        {
+            "model_name": "Random Forests",
+            "model_run_method": RF.run_the_model
+        }
     ]
 
     df_evaluations = pd.DataFrame(columns=[
@@ -284,27 +285,132 @@ def run_all_models():
         'top_5_features_deceptive', 'top_5_features_truthful',
         'bottom_5_features_deceptive', 'bottom_5_features_truthful'
     ])
+    
+    # Dictionary to store predictions from each model
+    all_model_preds = {}
 
     for model_info in models:
-        print("######################################################")
-        print(f"Running model - {model_info['model_name']}")
-        for dataset_name, dataset in datasets_dict.items():
-            print(f"Running model - {model_info['model_name']} with {dataset_name}")
+            print("######################################################")
+            print(f"Running model - {model_info['model_name']}")
             model_run_method = model_info["model_run_method"]
-            df_evaluation = model_run_method(dataset_name, *dataset)
-            print(f"df_evaluation = {df_evaluation}")
-            if df_evaluations.empty:
-                df_evaluations = df_evaluation
-            else:
-                df_evaluations = pd.concat([df_evaluations, df_evaluation], ignore_index=True)
+
+            for dataset_name, dataset in datasets_dict.items():
+                print(f"Running model - {model_info['model_name']} with {dataset_name}")
+                df_evaluation, y_pred = model_run_method(dataset_name, *dataset)
+
+                # Store predictions for statistical testing
+                all_model_preds[f"{model_info['model_name']} ({dataset_name})"] = y_pred
+
+                if df_evaluations.empty:
+                    df_evaluations = df_evaluation
+                else:
+                    df_evaluations = pd.concat([df_evaluations, df_evaluation], ignore_index=True)
 
     df_evaluations.to_csv(EVALUATIONS_FILENAME, index=False)
     print(f"df_evaluations was saved into {EVALUATIONS_FILENAME}")
     print("Done with all models!")
+    
+    
+    
+# Function to create the contingency matrix
+def get_contingency_matrix(true_labels, model1_preds, model2_preds):
+    """
+    Computes the contingency matrix for two models' predictions using mlxtend's mcnemar_table.
+
+    Parameters:
+    -----------
+    true_labels : array-like
+        Ground truth labels.
+    model1_preds : array-like
+        Predictions from the first model.
+    model2_preds : array-like
+        Predictions from the second model.
+
+    Returns:
+    --------
+    contingency_matrix : 2x2 numpy array
+        The contingency matrix [[a, b], [c, d]].
+    """
+    return mcnemar_table(y_target=true_labels, y_model1=model1_preds, y_model2=model2_preds)
+
+
+
+# Function to perform McNemar's test
+def mcnemar_test(contingency_matrix):
+    """
+    Performs McNemar's test for two models' predictions using mlxtend's mcnemar function.
+
+    Parameters:
+    -----------
+    contingency_matrix : array-like
+        A 2x2 numpy array [[a, b], [c, d]].
+
+    Returns:
+    --------
+    chi2_stat : float
+        The chi-squared statistic.
+    p_value : float
+        The p-value corresponding to the chi-squared statistic.
+    """
+    chi2_stat, p_value = mcnemar(ary=contingency_matrix, corrected=True)
+    return chi2_stat, p_value
+
+
+
+# Function to compare all four models in pairs using McNemar's test
+def compare_all_models(true_labels, model_preds):
+    """
+    Compare four models pairwise using McNemar's test.
+
+    Parameters:
+    -----------
+    true_labels : array-like
+        Ground truth labels.
+    model_preds : dict
+        A dictionary with model names as keys and their respective predictions as values.
+
+    Returns:
+    --------
+    results : dict
+        A dictionary with chi-squared statistics and p-values for all pairwise comparisons.
+    """
+    model_names = list(model_preds.keys())
+    results = {}
+    alpha = 0.05  # significance level
+
+    for i in range(len(model_names)):
+        for j in range(i + 1, len(model_names)):
+            model1, model2 = model_names[i], model_names[j]
+            print(f"\nComparison: {model1} vs {model2}")
+
+            cm = get_contingency_matrix(true_labels, model_preds[model1], model_preds[model2])
+            chi2_stat, p_val = mcnemar_test(cm)
+
+            # Interpret the result
+            if p_val < alpha:
+                print(f"p-value = {p_val:.4f}, which is less than {alpha}.")
+                print(f"We reject the null hypothesis (H₀). {model1} and {model2} have significantly different accuracies.")
+            else:
+                print(f"p-value = {p_val:.4f}, which is greater than {alpha}.")
+                print(f"We fail to reject the null hypothesis (H₀). {model1} and {model2} do not have significantly different accuracies.")
+            
+            results[f"{model1}_vs_{model2}"] = {'chi2': chi2_stat, 'p_value': p_val}
+
+    return results
+
 
 
 if __name__ == "__main__":
     # Uncomment to preprocess data before running models, we only need to run this once
     # preprocess()
     run_all_models()
+    
+    
+    "TODO: ----------------------------------------------"
+    true_labels = " "
+    
+    # Perform statistical testing on the predictions
+    # true_labels = datasets_dict['unigrams'][3]  # Assuming y_test is the fourth item in the tuple
+    # This varible will only work when we run the codes and we have the y_pred ready for each model
+    compare_all_models(true_labels, )
 

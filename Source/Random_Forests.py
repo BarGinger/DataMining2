@@ -1,92 +1,128 @@
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
-
+from sklearn.model_selection import GridSearchCV
+import utils
 
 class RandomForestModel:
+    """
+    A class to represent RandomForestModel for text classification.
+
+    Attributes:
+    -----------
+    model : RandomForestClassifier
+        The RandomForestModel instance.
+    max_features : int
+        The maximum number of features to be selected. Default is 100.
+    selected_features_indices : list
+        The indices of the selected features.
+
+    Methods:
+    --------
+    train(X_train, y_train, max_depth=[3, 5, 7, 10], n_estimators=[50, 100, 200], cv=5)
+        Trains the model using cross-validation to find the best parameters.
+    predict(X)
+        Predicts the class labels for the input data.
+    get_top_k_features(vectorizer, k=5)
+        Returns the top k features for each class.
+    get_bottom_k_features(vectorizer, k=5)
+        Returns the least k features for each class.
+    """
+
     def __init__(self):
-        self.vectorizer = None
-        self.model = RandomForestClassifier(random_state=42)
+        self.model = None
+        self.selected_features_indices = None
 
-    # Feature Extraction: Unigram and Bigram features
-    def extract_features(self, X_train, X_test, ngram_range=(1, 1)):
-        self.vectorizer = TfidfVectorizer(ngram_range=ngram_range, stop_words='english', max_features=5000)
-        X_train_vec = self.vectorizer.fit_transform(X_train)
-        X_test_vec = self.vectorizer.transform(X_test)
-        return X_train_vec, X_test_vec
+    def train(self, X_train, y_train, max_depth=[3, 5, 7, 10], n_estimators=[50, 100, 200], cv=5, k=100):
+        """
+        Trains the RandomForestClassifier model using cross-validation.
 
-    # Evaluation Function using Cross-Validation
-    def evaluate_model_cv(self, X_train, y_train, cv=5):
-        scores = cross_val_score(self.model, X_train, y_train, cv=cv, scoring='accuracy')
-        print(f"Cross-Validation Accuracy Scores: {scores}")
-        print(f"Mean Accuracy: {scores.mean():.4f}")
-        return scores
+        Parameters:
+        -----------
+        X_train : array-like of shape (n_samples, n_features)
+            The training input samples.
+        y_train : array-like of shape (n_samples,)
+            The target values.
+        max_depth : list, optional
+            List of max_depth values to try. Default is [3, 5, 7, 10].
+        n_estimators : list, optional
+            List of n_estimators values to try. Default is [50, 100, 200].
+        cv : int, optional
+            The number of cross-validation folds. Default is 5.
+        k : int, optional
+            The number of features to use. Default is 100.
 
-    # Final Evaluation on Test Set
-    def evaluate_model_test(self, X_train, X_test, y_train, y_test):
-        self.model.fit(X_train, y_train)
-        y_pred = self.model.predict(X_test)
+        Returns:
+        --------
+        None
+        """
+        # Perform feature selection
+        if k == X_train.shape[1]:
+            X_train_post_feature_selec = X_train
+            self.selected_features_indices = range(X_train_post_feature_selec.shape[1])
+        else:
+            X_train_post_feature_selec, self.selected_features_indices = utils.get_top_features(X_train, y_train, k)
         
-        accuracy = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred)
-        recall = recall_score(y_test, y_pred)
-        f1 = f1_score(y_test, y_pred)
-        
-        print(f"Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1 Score: {f1:.4f}")
-        return accuracy, precision, recall, f1
+        # Define parameter grid
+        param_grid = {'max_depth': max_depth, 'n_estimators': n_estimators}
+        grid = GridSearchCV(RandomForestClassifier(), param_grid, cv=cv, scoring='accuracy')
+        grid.fit(X_train_post_feature_selec, y_train)
 
-    # Get top features
-    def get_top_features(self, n=5):
-        if hasattr(self.model, 'feature_importances_'):
-            feature_names = np.array(self.vectorizer.get_feature_names_out())
-            importances = self.model.feature_importances_
-            top_indices = np.argsort(importances)[-n:]
-            print("Top features for the random forest:")
-            print(feature_names[top_indices])
+        # Save the best model after cross-validation
+        self.model = grid.best_estimator_
+        print(f"Best parameters - max_depth: {self.model.max_depth}, n_estimators: {self.model.n_estimators}")
 
-    def run(self, df):
-        X = df['review']
-        
-        # Convert 'is_fake' from FAKE Enum to integers
-        y = df['is_fake'].apply(lambda x: 1 if x.name == "DECEPTIVE" else 0)
+    def predict(self, X):
+        """
+        Predicts the class labels for the input data.
 
-        # Split the data: 80% for training (Folds 1-4), 20% for testing (Fold 5)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+        Parameters:
+        -----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
 
-        # Run for Unigrams
-        print("=== Results for Unigrams ===")
-        X_train_uni, X_test_uni = self.extract_features(X_train, X_test, ngram_range=(1, 1))
-        
-        # Perform Cross-Validation on Training Set
-        self.evaluate_model_cv(X_train_uni, y_train, cv=5)
+        Returns:
+        --------
+        y_pred : array-like of shape (n_samples,)
+            The predicted class labels.
+        """
+        if not self.model:
+            raise Exception("Model is not initialized. Please call the train method first.")
 
-        # Final Evaluation on Test Set
-        self.evaluate_model_test(X_train_uni, X_test_uni, y_train, y_test)
+        X_post_feature_selec = X[:, self.selected_features_indices]
+        y_pred = self.model.predict(X_post_feature_selec)
+        return y_pred
 
-        # Get top features
-        self.get_top_features()
+    def get_top_k_features(self, vectorizer, k=5):
+        """
+        Returns the top k features for each class.
+        """
+        feature_importances = self.model.feature_importances_
+        top_k_indices = np.argsort(feature_importances)[-k:]
+        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
 
-        # Run for Bigrams
-        print("\n=== Results for Bigrams ===")
-        X_train_bi, X_test_bi = self.extract_features(X_train, X_test, ngram_range=(1, 2))
-        
-        # Perform Cross-Validation on Training Set with Bigrams
-        self.evaluate_model_cv(X_train_bi, y_train, cv=5)
+        print(f"Top {k} features by importance: {feature_names[top_k_indices]}")
+        return feature_names[top_k_indices]
 
-        # Final Evaluation on Test Set with Bigrams
-        self.evaluate_model_test(X_train_bi, X_test_bi, y_train, y_test)
+    def get_bottom_k_features(self, vectorizer, k=5):
+        """
+        Returns the bottom k features for each class.
+        """
+        feature_importances = self.model.feature_importances_
+        bottom_k_indices = np.argsort(feature_importances)[:k]
+        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
+
+        print(f"Bottom {k} features by importance: {feature_names[bottom_k_indices]}")
+        return feature_names[bottom_k_indices]
 
 def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     """
-    Run the current model with the given train and test sets
+    Run the model with the given train and test sets.
 
     Parameters:
     -----------
     dataset_name : str
-            The name of the given dataset (unigrams or bigrams)
+        The name of the given dataset (unigrams or bigrams).
     X_train : array-like of shape (n_samples, n_features)
         The training input samples.
     y_train : array-like of shape (n_samples,)
@@ -98,21 +134,35 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     Returns:
     --------
-    df_evaluation : dataframe
-        A dataframe with the evaluation scores and needed info for further analysis
+    df_evaluation : DataFrame
+        A DataFrame with evaluation scores and needed info for further analysis.
     """
-    # todo adopt this
-    rf_model = RandomForestModel()
-    rf_model.run(df)
+    evaluations = []
+    total_count_features = X_train.shape[1]
+    number_feature_range = utils.get_feature_range(total_count_features)
 
-    print("Done!")
+    for k in number_feature_range:
+        print(f"Running with {k} features")
+        model = RandomForestModel()
+        model.train(X_train, y_train, max_depth=[3, 5, 7, 10], n_estimators=[50, 100, 200], cv=5, k=k)
+        y_pred = model.predict(X_test)
 
-if __name__ == "__main__":
-    # Load the dataset from the get_df function
-    df = get_df()
+        df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
+        top_5_features = model.get_top_k_features(vectorizer, k=5)
+        bottom_5_features = model.get_bottom_k_features(vectorizer, k=5)
 
-    # Initialize and run the RandomForestModel
-    rf_model = RandomForestModel()
-    rf_model.run(df)
+        new_row = {
+            'model_name': f'RandomForestModel (#{k} features)',
+            'dataset_name': dataset_name,
+            **df_scores,
+            'top_5_features': ", ".join(top_5_features),
+            'bottom_5_features': ", ".join(bottom_5_features)
+        }
+        evaluations.append(new_row)
 
-    print("Done!")
+    df_evaluations = pd.DataFrame(evaluations)
+    return df_evaluations, y_pred
+
+
+
+

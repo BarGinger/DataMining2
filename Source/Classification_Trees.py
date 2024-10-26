@@ -5,15 +5,39 @@ from sklearn.model_selection import GridSearchCV
 import utils
 
 
-
 class DecisionTreeModel:
-    def __init__(self):
-        self.vectorizer = None
-        self.model = None
+    """
+    A class to represent DecisionTreeModel for text classification.
 
-    def train(self, X_train, y_train, alphas=np.arange(0, 15, 0.5), cv=5):
+    Attributes:
+    -----------
+    model : DecisionTreeClassifier
+        The DecisionTreeModel instance.
+    max_features : int
+        The maximum number of features to be selected. Default is 100.
+    selected_features_indices : list
+        The indices of the selected features.
+
+    Methods:
+    --------
+    train(X_train, y_train, alphas=[0.1, 0.5, 1.0], cv=5)
+        Trains the model using cross-validation to find the best parameters.
+    predict(X)
+        Predicts the class labels for the input data.
+    get_top_k_features(vectorizer, k=5)
+        Returns the top k features for each class.
+    get_bottom_k_features(vectorizer, k=5)
+        Returns the least k features for each class.
+    """
+
+    def __init__(self):
+        self.model = None
+        self.selected_features_indices = None
+
+
+    def train(self, X_train, y_train, max_depth=[3, 5, 7, 10], cv=5, k=100):
         """
-        Trains the Decision Tree Classifier model using cross-validation to find the best alpha.
+        Trains the Multinomial Naive Bayes model using cross-validation to find the best alpha.
 
         Parameters:
         -----------
@@ -22,35 +46,33 @@ class DecisionTreeModel:
         y_train : array-like of shape (n_samples,)
             The target values.
         alphas : list, optional
-            The list of alpha values to try. Default is [0.0, 0.001, 0.01, 0.1].
+            The list of alpha values to try. Default is [0.1, 0.5, 1.0].
         cv : int, optional
             The number of cross-validation folds. Default is 5.
+        k : int, optional
+            The number of features to use. Default is 100.
 
         Returns:
         --------
         None
         """
-
-        # Define the hyperparameter grid
-        param_grid = {
-            'ccp_alpha': alphas,
-            'random_state': [42],
-            'max_depth': np.arange(10, 80, 10),
-            'min_samples_split': np.arange(10, 50, 5),
-            'min_samples_leaf': np.arange(5, 100, 5)
-        }
-
-        # Perform grid search with cross-validation
-        grid = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
-        grid.fit(X_train, y_train)
+        # Perform feature selection using the train data set
+        if k == X_train.shape[1]:
+            X_train_post_feature_selec = X_train
+            self.selected_features_indices = range(X_train_post_feature_selec.shape[1])
+        else:
+            X_train_post_feature_selec, self.selected_features_indices = utils.get_top_features(X_train,
+                                                                                                 y_train,
+                                                                                                 k)
+        # Train the Multinomial Naive Bayes model using cross-validation to find the best alpha
+        param_grid = {'max_depth': max_depth}  # Cross-validate over different alpha values
+        grid = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=cv, scoring='accuracy')
+        grid.fit(X_train_post_feature_selec, y_train)
 
         # Save the best model after cross-validation
         self.model = grid.best_estimator_
-        print(f"Best ccp_alpha: {self.model.ccp_alpha}")
         print(f"Best max_depth: {self.model.max_depth}")
-        print(f"Best min_samples_split: {self.model.min_samples_split}")
-        print(f"Best min_samples_leaf: {self.model.min_samples_leaf}")
-
+        
     def predict(self, X):
         """
         Predicts the class labels for the input data.
@@ -68,133 +90,64 @@ class DecisionTreeModel:
         if not self.model:
             raise Exception("Model is not initialized. Please call the appropriate method to initialize the model.")
 
-        y_pred = self.model.predict(X)
+        X_post_feature_selec = X[:, self.selected_features_indices]
+        y_pred = self.model.predict(X_post_feature_selec)
         return y_pred
+    
 
-        # Get top features
-    def get_top_features(self, vectorizer, k=5):
+    def get_top_k_features(self, vectorizer, k=5):
         """
-        Returns the top k features based on feature importances from the Decision Tree model.
-
-        Parameters:
-        -----------
-        vectorizer : CountVectorizer or TfidfVectorizer
-            The vectorizer used to transform the text data.
-        k : int, optional
-            The number of top features to return. Default is 5.
-
-        Returns:
-        --------
-        top_k_features : dict
-            A dictionary containing the top k features for each class.
+        Returns the top k features for each class.
         """
-        if hasattr(self.model, 'feature_importances_'):
-            feature_names = np.array(vectorizer.get_feature_names_out())
-            importances = self.model.feature_importances_
-            top_indices = np.argsort(importances)[-k:]
+        feature_log_probs = self.model.feature_importances_
 
-            # Extract feature names
-            # feature_names = np.array(vectorizer.get_feature_names_out())
-            # # Get feature importances from the model
-            # importances = self.model.feature_importances_
-            #
-            # # Get the top k most important features
-            # top_k_indices = np.argsort(importances)[-k:]  # Top k indices
-            # top_k_features = feature_names[top_k_indices]
+        # Calculate the difference in log-probabilities between classes
+        log_prob_diff = feature_log_probs[1] - feature_log_probs[0]
 
-            return {
-                'deceptive': feature_names[top_indices],  # Example key: might need specific class labels
-                'truthful': []#top_k_features
-            }
-        else:
-            raise Exception("Model does not have feature importances. Make sure the model is trained.")
+        # Get the top k features that are most indicative of deceptive and truthful reviews
+        top_k_deceptive = np.argsort(log_prob_diff)[-k:]  # Deceptive class (positive diff)
+        top_k_truthful = np.argsort(-log_prob_diff)[-k:]  # Truthful class (negative diff)
+
+        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
+        print(f"Top {k} features for deceptive reviews: {feature_names[top_k_deceptive]}")
+        print(f"Top {k} features for truthful reviews: {feature_names[top_k_truthful]}")
+
+        return {
+            'deceptive': feature_names[top_k_deceptive],
+            'truthful': feature_names[top_k_truthful]
+        }
 
     def get_bottom_k_features(self, vectorizer, k=5):
         """
-        Returns the bottom k features based on feature importances from the Decision Tree model.
-
-        Parameters:
-        -----------
-        vectorizer : CountVectorizer or TfidfVectorizer
-            The vectorizer used to transform the text data.
-        k : int, optional
-            The number of bottom features to return. Default is 5.
-
-        Returns:
-        --------
-        bottom_k_features : dict
-            A dictionary containing the bottom k features for each class.
+        Returns the bottom k features for each class.
         """
-        if hasattr(self.model, 'feature_importances_'):
-            # Extract feature names
-            feature_names = np.array(vectorizer.get_feature_names_out())
-            # Get feature importances from the model
-            importances = self.model.feature_importances_
+        feature_log_probs = self.model.feature_importances_
 
-            # Get the bottom k least important features
-            bottom_k_indices = np.argsort(importances)[:k]  # Bottom k indices
-            bottom_k_features = feature_names[bottom_k_indices]
+        # For deceptive: features with the smallest log-prob for class 1 (deceptive)
+        bottom_k_deceptive = np.argsort(feature_log_probs[1])[:k]
 
-            return {
-                'deceptive': bottom_k_features,  # Example key: might need specific class labels
-                'truthful': bottom_k_features
-            }
-        else:
-            raise Exception("Model does not have feature importances. Make sure the model is trained.")
+        # For truthful: features with the smallest log-prob for class 0 (truthful)
+        bottom_k_truthful = np.argsort(feature_log_probs[0])[:k]
 
+        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
+        print(f"Bottom {k} features for deceptive reviews: {feature_names[bottom_k_deceptive]}")
+        print(f"Bottom {k} features for truthful reviews: {feature_names[bottom_k_truthful]}")
 
-    # Feature Extraction: Unigram and Bigram features
-    # def extract_features(self, X_train, X_test, ngram_range=(1, 1)):
-    #     self.vectorizer = TfidfVectorizer(ngram_range=ngram_range, stop_words='english', max_features=5000)
-    #     X_train_vec = self.vectorizer.fit_transform(X_train)
-    #     X_test_vec = self.vectorizer.transform(X_test)
-    #     return X_train_vec, X_test_vec
-    #
-    # Evaluation Function
-    # def evaluate_model(self, X_train, X_test, y_train, y_test):
-    #     self.model.fit(X_train, y_train)
-    #     y_pred = self.model.predict(X_test)
-    #
-    #     accuracy = accuracy_score(y_test, y_pred)
-    #     precision = precision_score(y_test, y_pred)
-    #     recall = recall_score(y_test, y_pred)
-    #     f1 = f1_score(y_test, y_pred)
-    #
-    #     print(f"Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1 Score: {f1:.4f}")
-    #     return accuracy, precision, recall, f1
-    #
-    # def run(self, df):
-    #     X = df['review']
-    #
-    #     # Convert 'is_fake' from FAKE Enum to integers
-    #     y = df['is_fake'].apply(lambda x: 1 if x.name == "DECEPTIVE" else 0)
-    #
-    #     # Split the data: 80% for training (Folds 1-4), 20% for testing (Fold 5)
-    #     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    #
-    #     # Run for Unigrams
-    #     print("=== Results for Unigrams ===")
-    #     X_train_uni, X_test_uni = self.extract_features(X_train, X_test, ngram_range=(1, 1))
-    #     self.evaluate_model(X_train_uni, X_test_uni, y_train, y_test)
-    #
-    #     # Get top features
-    #     print("\nTop features for the Classification Tree:")
-    #     self.get_top_features()
-    #
-    #     # Run for Bigrams
-    #     print("\n=== Results for Bigrams ===")
-    #     X_train_bi, X_test_bi = self.extract_features(X_train, X_test, ngram_range=(1, 2))
-    #     self.evaluate_model(X_train_bi, X_test_bi, y_train, y_test)
+        return {
+            'deceptive': feature_names[bottom_k_deceptive],
+            'truthful': feature_names[bottom_k_truthful]
+        }
+
 
 
 def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     """
-    Run the current model with the given train and test sets
+    Run the model with the given train and test sets.
 
     Parameters:
     -----------
     dataset_name : str
-            The name of the given dataset (unigrams or bigrams)
+        The name of the given dataset (unigrams or bigrams).
     X_train : array-like of shape (n_samples, n_features)
         The training input samples.
     y_train : array-like of shape (n_samples,)
@@ -206,28 +159,38 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     Returns:
     --------
-    df_evaluation : dataframe
-        A dataframe with the evaluation scores and needed info for further analysis
+    df_evaluation : DataFrame
+        A DataFrame with evaluation scores and needed info for further analysis.
+    y_pred : array-like of shape (n_samples,)
+        The predicted labels for the test set.
     """
-    # todo adopt this
-    model = DecisionTreeModel()
-    model.train(X_train, y_train)
-    # predict on given test set
-    y_pred = model.predict(X_test)
-    # Calculate scores
-    df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
-    # Get top and bottom 5 features
-    df_top_5 = model.get_top_features(vectorizer, k=5)
-    df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
+    evaluations = []
+    total_count_features = X_train.shape[1]
+    number_feature_range = utils.get_feature_range(total_count_features)
 
-    # Create DataFrame from the list of evaluations
-    df_evaluations = pd.DataFrame([{
-        'model_name': f'Decision Tree',
-        'dataset_name': dataset_name,
-        **df_scores,  # Unpack scores
-        'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
-        'top_5_features_truthful': ", ".join(df_top_5['truthful']),
-        'bottom_5_features_deceptive': ", ".join(df_bottom_5['deceptive']),
-        'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
-    }])
-    return df_evaluations
+    for k in number_feature_range:
+        print(f"Running with {k} features")
+        model = DecisionTreeModel()
+        model.train(X_train, y_train, max_depth=[3, 5, 7, 10], cv=5, k=k)
+        y_pred = model.predict(X_test)
+
+        df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
+        df_top_5 = model.get_top_k_features(vectorizer, k=5)
+        df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
+
+        new_row = {
+            'model_name': f'DecisionTreeModel (#{k} features)',
+            'dataset_name': dataset_name,
+            **df_scores,
+            'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
+            'top_5_features_truthful': ", ".join(df_top_5['truthful']),
+            'bottom_5_features_deceptive': ", ".join(df_bottom_5['deceptive']),
+            'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
+        }
+        evaluations.append(new_row)
+
+    df_evaluations = pd.DataFrame(evaluations)
+    return df_evaluations, y_pred  # return both evaluation dataframe and predictions
+
+
+
