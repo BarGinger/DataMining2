@@ -1,184 +1,201 @@
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.linear_model import LogisticRegression
-
 import utils
+
 
 class Logreg:
     """
-    A class to represent a Logistic Regression model with Lasso penalty (L1 regularization)
-    for text classification.
-
+    Logistic Regression model with Lasso (L1) or Ridge (L2) regularization for text classification.
+    
     Attributes:
     -----------
     model : LogisticRegression
-        The logistic regression model with Lasso penalty.
+        The logistic regression model with the specified penalty.
+    penalty : str
+        The regularization type ('l1' for Lasso or 'l2' for Ridge).
     selected_features_indices : list
-        The indices of the selected features.
+        Indices of selected features if feature selection is applied.
 
     Methods:
     --------
-    train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5)
+    train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, max_features=None)
         Trains the Logistic Regression model using cross-validation to find the best C.
     predict(X)
         Predicts the class labels for the input data.
     get_top_k_features(vectorizer, k=5)
-        Returns the top k features for each class.
+        Returns the top k most influential features.
     get_bottom_k_features(vectorizer, k=5)
-        Returns the least k features for each class.
+        Returns the k least influential features.
     """
 
-    def __init__(self):
+    def __init__(self, penalty='l1'):
         """
-        Constructs all the necessary attributes for the LogisticRegressionLassoModel object.
+        Initializes the LogisticRegressionModel object.
+        
+        Parameters:
+        -----------
+        penalty : str, optional
+            Regularization type, either 'l1' for Lasso or 'l2' for Ridge (default is 'l1').
         """
+        if penalty not in ['l1', 'l2']:
+            raise ValueError("Penalty must be either 'l1' or 'l2'.")
+        
         self.model = None
+        self.penalty = penalty
         self.selected_features_indices = None
 
-    def train(self, X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, k=100):
+    def train(self, X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, max_features=None):
         """
         Trains the Logistic Regression model using cross-validation to find the best C.
-
+        
         Parameters:
         -----------
         X_train : array-like of shape (n_samples, n_features)
-            The training input samples.
+            Training data features.
         y_train : array-like of shape (n_samples,)
-            The target values.
+            Training data labels.
         Cs : list, optional
-            The list of C values to try. Default is [0.01, 0.1, 1.0, 10].
+            List of C values for cross-validation (default is [0.01, 0.1, 1.0, 10]).
         cv : int, optional
-            The number of cross-validation folds. Default is 5.
-        k : int, optional
-            The number of features to use. Default is 100.
-
+            Number of cross-validation folds (default is 5).
+        max_features : int, optional
+            Maximum number of features to retain (default is None, keeping all).
+        
         Returns:
         --------
         None
         """
-        if k == X_train.shape[1]:
-            X_train_post_feature_selec = X_train
-            self.selected_features_indices = range(X_train_post_feature_selec.shape[1])
+        solver = 'liblinear' if self.penalty == 'l1' else 'lbfgs'
+
+        # Optionally perform feature selection using utils.feature_selection
+        if max_features is not None and max_features < X_train.shape[1]:
+            X_train, self.selected_features_indices = utils.feature_selection(X_train, y_train, method=self.penalty, max_features=max_features)
         else:
-            X_train_post_feature_selec, self.selected_features_indices = utils.get_top_features(X_train, y_train, k)
+            self.selected_features_indices = range(X_train.shape[1])
 
-        param_grid = {'C': Cs}  # Cross-validate over different C values
-        grid = GridSearchCV(LogisticRegression(penalty='l1', solver='liblinear'), param_grid, cv=cv, scoring='accuracy')
-        grid.fit(X_train_post_feature_selec, y_train)
+        # Use GridSearchCV to find the optimal C value
+        param_grid = {'C': Cs}
+        grid = GridSearchCV(LogisticRegression(penalty=self.penalty, solver=solver, max_iter=1000),
+                            param_grid, cv=cv, scoring='accuracy')
+        grid.fit(X_train, y_train)
 
+        # Store the best model after cross-validation
         self.model = grid.best_estimator_
         print(f"Best C: {self.model.C}")
 
     def predict(self, X):
         """
-        Predicts the class labels for the input data.
-
+        Predicts class labels for the input data.
+        
         Parameters:
         -----------
         X : array-like of shape (n_samples, n_features)
-            The input samples.
-
+            Input data to predict.
+        
         Returns:
         --------
         y_pred : array-like of shape (n_samples,)
-            The predicted class labels.
+            Predicted class labels.
         """
         if not self.model:
-            raise Exception("Model is not initialized. Please call the appropriate method to initialize the model.")
+            raise Exception("Model not initialized. Call the 'train' method first.")
 
-        X_post_feature_selec = X[:, self.selected_features_indices]
-        y_pred = self.model.predict(X_post_feature_selec)
+        X_selected = X[:, self.selected_features_indices]
+        y_pred = self.model.predict(X_selected)
         return y_pred
 
     def get_top_k_features(self, vectorizer, k=5):
         """
-        Returns the top k features for each class.
-
+        Returns the top k most influential features.
+        
         Parameters:
         -----------
         vectorizer : CountVectorizer or TfidfVectorizer
             The vectorizer used to transform the text data.
         k : int, optional
-            The number of top features to return. Default is 5.
-
+            Number of top features to return (default is 5).
+        
         Returns:
         --------
-        top_k_features : dict
-            A dictionary containing the top k features for each class.
+        top_k_features : array
+            Array containing the top k features.
         """
-        feature_importance = np.abs(self.model.coef_[0])  # Absolute values of coefficients
-        top_k_indices = np.argsort(feature_importance)[-k:]  # Indices of top k features
-        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
+        feature_importance = np.abs(self.model.coef_[0])
+        top_k_indices = np.argsort(feature_importance)[-k:]
+        feature_names = vectorizer.get_feature_names_out()[self.selected_features_indices]
 
         print(f"Top {k} features for classification: {feature_names[top_k_indices]}")
         return feature_names[top_k_indices]
 
     def get_bottom_k_features(self, vectorizer, k=5):
         """
-        Returns the least k features for each class.
-
+        Returns the least k influential features.
+        
         Parameters:
         -----------
         vectorizer : CountVectorizer or TfidfVectorizer
             The vectorizer used to transform the text data.
         k : int, optional
-            The number of bottom features to return. Default is 5.
-
+            Number of bottom features to return (default is 5).
+        
         Returns:
         --------
         bottom_k_features : array
-            An array containing the bottom k features for the class.
+            Array containing the bottom k features.
         """
         feature_importance = np.abs(self.model.coef_[0])
-        bottom_k_indices = np.argsort(feature_importance)[:k]  # Indices of bottom k features
-        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
+        bottom_k_indices = np.argsort(feature_importance)[:k]
+        feature_names = vectorizer.get_feature_names_out()[self.selected_features_indices]
 
         print(f"Bottom {k} features for classification: {feature_names[bottom_k_indices]}")
         return feature_names[bottom_k_indices]
 
 
-def run_the_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
+def run_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, penalty='l1', max_features=None):
     """
-        Run the logistic regression model with Lasso penalty on the given train and test sets.
-
-        Parameters:
-        -----------
-        dataset_name : str
-            The name of the dataset (unigrams or bigrams).
-        X_train : array-like of shape (n_samples, n_features)
-            The training input samples.
-        y_train : array-like of shape (n_samples,)
-            The target values.
-        X_test : array-like of shape (n_samples, n_features)
-            The test input samples.
-        y_test : array-like of shape (n_samples,)
-            The target values.
-
-        Returns:
-        --------
-        df_evaluation : dataframe
-            A dataframe with the evaluation scores and info for further analysis.
+    Runs the Logistic Regression model on the provided data and evaluates it.
+    
+    Parameters:
+    -----------
+    dataset_name : str
+        Name of the dataset (e.g., unigrams or bigrams).
+    X_train : array-like
+        Training data features.
+    y_train : array-like
+        Training data labels.
+    X_test : array-like
+        Test data features.
+    y_test : array-like
+        Test data labels.
+    vectorizer : CountVectorizer or TfidfVectorizer
+        Vectorizer used to create the feature matrix.
+    penalty : str, optional
+        Regularization type ('l1' or 'l2'). Default is 'l1'.
+    max_features : int, optional
+        Maximum number of features to retain. Default is None, meaning all features.
+    
+    Returns:
+    --------
+    df_evaluation : pd.DataFrame
+        DataFrame with evaluation scores.
+    y_pred : array-like
+        Predicted class labels for the test set.
     """
-    evaluations = []
+    print(f"Running Logistic Regression with {penalty} regularization, max features: {max_features}")
+    model = Logreg(penalty=penalty)
+    model.train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, max_features=max_features)
+    y_pred = model.predict(X_test)
 
-    total_count_features = X_train.shape[1]
-    number_feature_range = utils.get_feature_range(total_count_features)
+    # Evaluate model performance
+    df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
 
-    for k in number_feature_range:
-        print(f"Running with {k} features")
-        model = Logreg()
-        model.train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, k=k)
-        y_pred = model.predict(X_test)
+    # Get top and bottom features for analysis
+    df_top_5 = model.get_top_k_features(vectorizer, k=5)
+    df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
 
-        df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
-
-        df_top_5 = model.get_top_k_features(vectorizer, k=5)
-        df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
-
-        new_row = {
+    new_row = {
             'model_name': f'Logistic Regression with Lasso (#{k} features)',
             'dataset_name': dataset_name,
             **df_scores,
@@ -188,7 +205,5 @@ def run_the_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vecto
             'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
         }
 
-        evaluations.append(new_row)
-
-    df_evaluations = pd.DataFrame(evaluations)
-    return df_evaluations, y_pred
+    df_evaluation = pd.DataFrame([new_row])
+    return df_evaluation, y_pred
