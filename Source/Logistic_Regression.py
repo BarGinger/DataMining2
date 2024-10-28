@@ -188,10 +188,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, pe
             'model_name': f'Logistic Regression with Lasso Penalty',
             'dataset_name': dataset_name,
             **df_scores,
-            'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
-            'top_5_features_truthful': ", ".join(df_top_5['truthful']),
-            'bottom_5_features_deceptive': ", ".join(df_bottom_5['deceptive']),
-            'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
+            'top_5_features': ", ".join(df_top_5),
+            'bottom_5_features': ", ".join(df_bottom_5)
         }
 
     df_evaluation = pd.DataFrame([new_row])
