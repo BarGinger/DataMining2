@@ -15,8 +15,6 @@ class Logreg:
         The logistic regression model with the specified penalty.
     penalty : str
         The regularization type ('l1' for Lasso or 'l2' for Ridge).
-    selected_features_indices : list
-        Indices of the selected features if feature selection is applied.
 
     Methods:
     --------
@@ -25,9 +23,9 @@ class Logreg:
     predict(X)
         Predicts the class labels for the input data.
     get_top_k_features(vectorizer, k=5)
-        Returns the top k most influential features.
+        Returns the top k most influential features for each class (deceptive and truthful).
     get_bottom_k_features(vectorizer, k=5)
-        Returns the k least influential features.
+        Returns the bottom k least influential features for each class (deceptive and truthful).
     """
 
     def __init__(self, penalty='l1'):
@@ -99,7 +97,7 @@ class Logreg:
 
     def get_top_k_features(self, vectorizer, k=5):
         """
-        Returns the top k most influential features.
+        Returns the top k most influential features for each class (deceptive and truthful).
         
         Parameters:
         -----------
@@ -110,19 +108,24 @@ class Logreg:
         
         Returns:
         --------
-        top_k_features : array
-            Array containing the top k features.
+        dict
+            A dictionary containing the top k features for each class (deceptive and truthful).
         """
-        feature_importance = np.abs(self.model.coef_[0])
-        top_k_indices = np.argsort(feature_importance)[-k:]
+        feature_importance = self.model.coef_[0]
         feature_names = vectorizer.get_feature_names_out()
 
-        print(f"Top {k} features for classification: {feature_names[top_k_indices]}")
-        return feature_names[top_k_indices]
+        # Sort features for deceptive (positive) and truthful (negative) influence
+        top_k_deceptive = np.argsort(feature_importance)[-k:]  # Highest positive weights for deceptive
+        top_k_truthful = np.argsort(-feature_importance)[-k:]  # Highest negative weights for truthful
+
+        return {
+            'deceptive': feature_names[top_k_deceptive],
+            'truthful': feature_names[top_k_truthful]
+        }
 
     def get_bottom_k_features(self, vectorizer, k=5):
         """
-        Returns the least k influential features.
+        Returns the least k influential features for each class (deceptive and truthful).
         
         Parameters:
         -----------
@@ -133,15 +136,20 @@ class Logreg:
         
         Returns:
         --------
-        bottom_k_features : array
-            Array containing the bottom k features.
+        dict
+            A dictionary containing the bottom k features for each class (deceptive and truthful).
         """
-        feature_importance = np.abs(self.model.coef_[0])
-        bottom_k_indices = np.argsort(feature_importance)[:k]
+        feature_importance = self.model.coef_[0]
         feature_names = vectorizer.get_feature_names_out()
 
-        print(f"Bottom {k} features for classification: {feature_names[bottom_k_indices]}")
-        return feature_names[bottom_k_indices]
+        # Sort features with the least influence for each class
+        bottom_k_deceptive = np.argsort(feature_importance)[:k]  # Lowest positive weights for deceptive
+        bottom_k_truthful = np.argsort(-feature_importance)[:k]  # Lowest negative weights for truthful
+
+        return {
+            'deceptive': feature_names[bottom_k_deceptive],
+            'truthful': feature_names[bottom_k_truthful]
+        }
 
 
 def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, penalty='l1'):
@@ -180,17 +188,20 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, pe
     # Evaluate model performance
     df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
 
-    # Get top and bottom features for analysis
+    # Get top and bottom features for deceptive and truthful classifications
     df_top_5 = model.get_top_k_features(vectorizer, k=5)
     df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
 
+    # Create an evaluation row in the format used for Naive Bayes
     new_row = {
-            'model_name': f'Logistic Regression with Lasso Penalty',
-            'dataset_name': dataset_name,
-            **df_scores,
-            'top_5_features': ", ".join(df_top_5),
-            'bottom_5_features': ", ".join(df_bottom_5)
-        }
+        'model_name': f'Logistic Regression ({penalty.upper()} regularization)',
+        'dataset_name': dataset_name,
+        **df_scores,
+        'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
+        'top_5_features_truthful': ", ".join(df_top_5['truthful']),
+        'bottom_5_features_deceptive': ", ".join(df_bottom_5['deceptive']),
+        'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
+    }
 
     df_evaluation = pd.DataFrame([new_row])
     return df_evaluation, y_pred
