@@ -39,8 +39,8 @@ except OSError:
     download(model_name)
     nlp = spacy.load(model_name)
 
-PREPROCESSED_FILENAME = r"C:\UU\DataMining2\Data\preprocessed_df.csv"
-EVALUATIONS_FILENAME = r"C:\UU\DataMining2\Output\df_evaluations.csv"
+PREPROCESSED_FILENAME = r"..\Data\preprocessed_df.csv"
+EVALUATIONS_FILENAME = r"..\Output\df_evaluations.csv"
 
 
 class FAKE(Enum):
@@ -249,7 +249,7 @@ def get_datasets_wrapper(use_bigrams):
     return get_datasets(use_bigrams=use_bigrams)
 
 
-def run_all_models():
+def  run_all_models():
     """
     Run all specified models on both unigram and bigram datasets, evaluate their performance,
     and save the evaluation results to a CSV file.
@@ -262,22 +262,22 @@ def run_all_models():
 
     # iterate over all the models, for each one train and predict on unigrams and bigrams datasets
     models = [
-        {
-            "model_name": "Multinomial Naive Bayes",
-            "model_run_method": MNB.run_the_model
-        },
+        # {
+        #     "model_name": "Multinomial Naive Bayes",
+        #     "model_run_method": MNB.run_the_model
+        # },
         {
             "model_name": "Logistic Regression with Lasso Penalty",
             "model_run_method": LR.run_the_model
         },
-        {
-            "model_name": "Classification Trees",
-            "model_run_method": CLT.run_the_model
-        },
-        {
-            "model_name": "Random Forests",
-            "model_run_method": RF.run_the_model
-        }
+        # {
+            # "model_name": "Classification Trees",
+            # "model_run_method": CLT.run_the_model
+        # },
+        # {
+        #     "model_name": "Random Forests",
+        #     "model_run_method": RF.run_the_model
+        # }
     ]
 
     df_evaluations = pd.DataFrame(columns=[
