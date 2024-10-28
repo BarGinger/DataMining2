@@ -7,8 +7,8 @@ import utils
 
 class Logreg:
     """
-    Logistic Regression model with Lasso (L1) or Ridge (L2) regularization for text classification.
-    
+    Logistic Regression model with L1 (Lasso) or L2 (Ridge) regularization for text classification.
+
     Attributes:
     -----------
     model : LogisticRegression
@@ -16,11 +16,11 @@ class Logreg:
     penalty : str
         The regularization type ('l1' for Lasso or 'l2' for Ridge).
     selected_features_indices : list
-        Indices of selected features if feature selection is applied.
+        Indices of the selected features if feature selection is applied.
 
     Methods:
     --------
-    train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, max_features=None)
+    train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5)
         Trains the Logistic Regression model using cross-validation to find the best C.
     predict(X)
         Predicts the class labels for the input data.
@@ -44,9 +44,8 @@ class Logreg:
         
         self.model = None
         self.penalty = penalty
-        self.selected_features_indices = None
 
-    def train(self, X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, max_features=None):
+    def train(self, X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5):
         """
         Trains the Logistic Regression model using cross-validation to find the best C.
         
@@ -60,20 +59,13 @@ class Logreg:
             List of C values for cross-validation (default is [0.01, 0.1, 1.0, 10]).
         cv : int, optional
             Number of cross-validation folds (default is 5).
-        max_features : int, optional
-            Maximum number of features to retain (default is None, keeping all).
         
         Returns:
         --------
         None
         """
+        # Select the solver based on penalty type
         solver = 'liblinear' if self.penalty == 'l1' else 'lbfgs'
-
-        # Optionally perform feature selection using utils.feature_selection
-        if max_features is not None and max_features < X_train.shape[1]:
-            X_train, self.selected_features_indices = utils.feature_selection(X_train, y_train, method=self.penalty, max_features=max_features)
-        else:
-            self.selected_features_indices = range(X_train.shape[1])
 
         # Use GridSearchCV to find the optimal C value
         param_grid = {'C': Cs}
@@ -102,8 +94,7 @@ class Logreg:
         if not self.model:
             raise Exception("Model not initialized. Call the 'train' method first.")
 
-        X_selected = X[:, self.selected_features_indices]
-        y_pred = self.model.predict(X_selected)
+        y_pred = self.model.predict(X)
         return y_pred
 
     def get_top_k_features(self, vectorizer, k=5):
@@ -124,7 +115,7 @@ class Logreg:
         """
         feature_importance = np.abs(self.model.coef_[0])
         top_k_indices = np.argsort(feature_importance)[-k:]
-        feature_names = vectorizer.get_feature_names_out()[self.selected_features_indices]
+        feature_names = vectorizer.get_feature_names_out()
 
         print(f"Top {k} features for classification: {feature_names[top_k_indices]}")
         return feature_names[top_k_indices]
@@ -147,13 +138,13 @@ class Logreg:
         """
         feature_importance = np.abs(self.model.coef_[0])
         bottom_k_indices = np.argsort(feature_importance)[:k]
-        feature_names = vectorizer.get_feature_names_out()[self.selected_features_indices]
+        feature_names = vectorizer.get_feature_names_out()
 
         print(f"Bottom {k} features for classification: {feature_names[bottom_k_indices]}")
         return feature_names[bottom_k_indices]
 
 
-def run_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, penalty='l1', max_features=None):
+def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, penalty='l1'):
     """
     Runs the Logistic Regression model on the provided data and evaluates it.
     
@@ -173,8 +164,6 @@ def run_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vectorize
         Vectorizer used to create the feature matrix.
     penalty : str, optional
         Regularization type ('l1' or 'l2'). Default is 'l1'.
-    max_features : int, optional
-        Maximum number of features to retain. Default is None, meaning all features.
     
     Returns:
     --------
@@ -183,9 +172,9 @@ def run_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vectorize
     y_pred : array-like
         Predicted class labels for the test set.
     """
-    print(f"Running Logistic Regression with {penalty} regularization, max features: {max_features}")
+    print(f"Running Logistic Regression with {penalty} regularization.")
     model = Logreg(penalty=penalty)
-    model.train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5, max_features=max_features)
+    model.train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5)
     y_pred = model.predict(X_test)
 
     # Evaluate model performance
@@ -196,7 +185,7 @@ def run_logistic_model(dataset_name, X_train, y_train, X_test, y_test, vectorize
     df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
 
     new_row = {
-            'model_name': f'Logistic Regression with Lasso (#{k} features)',
+            'model_name': f'Logistic Regression with Lasso Penalty',
             'dataset_name': dataset_name,
             **df_scores,
             'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
