@@ -442,6 +442,11 @@ def compare_all_models(datasets_dict, model_preds):
 if __name__ == "__main__":
     # Uncomment to preprocess data before running models, we only need to run this once
     # preprocess()
+
+    # get dataset
+    # d = get_datasets()
+
+    # train the models and retrieve scores
     df_4_statistical_analysis, datasets_dict = run_all_models()
     
     # Perform statistical testing on the predictions

@@ -177,7 +177,7 @@ def plot_scores_as_lines(df_scores):
     # Create the line plot
     plt.figure(figsize=(20, 16))
     # Create a FacetGrid for the plot
-    g = sns.FacetGrid(df_melted, col='dataset_name', hue='metric', sharey=False, height=5, aspect=1.5)
+    g = sns.FacetGrid(df_melted, col='dataset_name', hue='metric', sharex=False, sharey=False, height=5, aspect=1.5)
     g.map(sns.lineplot, 'feature_count', 'value')
 
     # Add titles and labels

@@ -173,8 +173,16 @@ def extract_features(reviews, ngram_range=(1, 1)):
     # vectorizer = CountVectorizer(ngram_range=(2, 2) if use_bigrams else (1, 1), stop_words=None, min_df=5)
     # X = vectorizer.fit_transform(df['review'])  # Use the preprocessed text column
 
-    vectorizer = TfidfVectorizer(min_df=0.02, max_df=0.98, ngram_range=ngram_range)
+    vectorizer = TfidfVectorizer(min_df=0.002, max_df=0.998, ngram_range=ngram_range)
     X = vectorizer.fit_transform(reviews).toarray()
+
+    vect = TfidfVectorizer(ngram_range=ngram_range)
+    X1 = vect.fit_transform(reviews).toarray()
+
+    no_filter_count = vect.get_feature_names_out().size
+    filter_count = vectorizer.get_feature_names_out().size
+    diff = no_filter_count - filter_count
+    print(f"the filter removed {diff} features, from {no_filter_count} to {filter_count}")
 
     return X, vectorizer
 

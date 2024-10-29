@@ -1,51 +1,51 @@
 ,model_name,dataset_name,class,feature,deceptive_count,truthful_count,coefs
-luxury,Logistic Regression with l2 Penalty,unigrams,1,luxury,67,5,1.5513683471849133
-recently,Logistic Regression with l2 Penalty,unigrams,1,recently,65,15,1.5085082489307056
-experience,Logistic Regression with l2 Penalty,unigrams,1,experience,149,78,1.2971239410553332
-wife,Logistic Regression with l2 Penalty,unigrams,1,wife,70,23,1.2718711265999512
-smell,Logistic Regression with l2 Penalty,unigrams,1,smell,59,9,1.1964379640244696
-elevator,Logistic Regression with l2 Penalty,unigrams,0,elevator,13,93,-1.7611712852059918
-location,Logistic Regression with l2 Penalty,unigrams,0,location,48,136,-1.5995559697326218
-floor,Logistic Regression with l2 Penalty,unigrams,0,floor,54,136,-1.4759006884077601
-great,Logistic Regression with l2 Penalty,unigrams,0,great,61,141,-1.204938876209892
-small,Logistic Regression with l2 Penalty,unigrams,0,small,44,104,-1.2012650602582107
-recently stayed,Logistic Regression with l1 Penalty,bigrams,1,recently stayed,35,4,4.007332923047038
-went room,Logistic Regression with l1 Penalty,bigrams,1,went room,17,1,3.1882975441657417
-luxury hotel,Logistic Regression with l1 Penalty,bigrams,1,luxury hotel,27,2,2.9096115220465566
-took hour,Logistic Regression with l1 Penalty,bigrams,1,took hour,23,2,2.9007946945525798
-rock hotel,Logistic Regression with l1 Penalty,bigrams,1,rock hotel,22,5,2.577678198896788
-booked hotel,Logistic Regression with l1 Penalty,bigrams,0,booked hotel,2,18,-2.4607570248129793
-bed comfortable,Logistic Regression with l1 Penalty,bigrams,0,bed comfortable,1,17,-1.8837483494397416
-great location,Logistic Regression with l1 Penalty,bigrams,0,great location,7,22,-1.242532746841464
-room small,Logistic Regression with l1 Penalty,bigrams,0,room small,10,31,-0.8386671220745181
-good location,Logistic Regression with l1 Penalty,bigrams,0,good location,3,14,-0.6588937661656874
-recently stayed,Logistic Regression with l2 Penalty,bigrams,1,recently stayed,35,4,2.382968904242559
-luxury hotel,Logistic Regression with l2 Penalty,bigrams,1,luxury hotel,27,2,1.9206538704796663
-took hour,Logistic Regression with l2 Penalty,bigrams,1,took hour,23,2,1.871889436174539
-not clean,Logistic Regression with l2 Penalty,bigrams,1,not clean,19,7,1.6416585731466946
-went room,Logistic Regression with l2 Penalty,bigrams,1,went room,17,1,1.6027187924556134
-booked hotel,Logistic Regression with l2 Penalty,bigrams,0,booked hotel,2,18,-1.412009956717898
-bed comfortable,Logistic Regression with l2 Penalty,bigrams,0,bed comfortable,1,17,-1.2927571562149995
-great location,Logistic Regression with l2 Penalty,bigrams,0,great location,7,22,-0.9825415781120754
-good location,Logistic Regression with l2 Penalty,bigrams,0,good location,3,14,-0.932711440045581
-room small,Logistic Regression with l2 Penalty,bigrams,0,room small,10,31,-0.9039642844654513
-recently,Logistic Regression with l1 Penalty,both,1,recently,65,15,15.224095325012211
-trouble,Logistic Regression with l1 Penalty,both,1,trouble,14,9,13.365150903861968
-decided,Logistic Regression with l1 Penalty,both,1,decided,69,17,12.018439477862225
-luxury,Logistic Regression with l1 Penalty,both,1,luxury,67,5,11.953030034433718
-turned,Logistic Regression with l1 Penalty,both,1,turned,33,3,11.646671320574722
-booked hotel,Logistic Regression with l1 Penalty,both,0,booked hotel,2,18,-19.426907956998928
-security,Logistic Regression with l1 Penalty,both,0,security,1,23,-12.591712868881412
-world,Logistic Regression with l1 Penalty,both,0,world,4,13,-10.628181585724732
-called,Logistic Regression with l1 Penalty,both,0,called,85,131,-10.41266596096517
-closet,Logistic Regression with l1 Penalty,both,0,closet,3,26,-9.746039755936062
-luxury,Logistic Regression with l2 Penalty,both,1,luxury,67,5,1.4551309658529241
-recently,Logistic Regression with l2 Penalty,both,1,recently,65,15,1.336167377314178
-wife,Logistic Regression with l2 Penalty,both,1,wife,70,23,1.2342194482815996
-experience,Logistic Regression with l2 Penalty,both,1,experience,149,78,1.1972876438101494
-decided,Logistic Regression with l2 Penalty,both,1,decided,69,17,1.1729818225640047
-elevator,Logistic Regression with l2 Penalty,both,0,elevator,13,93,-1.739358925189513
-location,Logistic Regression with l2 Penalty,both,0,location,48,136,-1.5024846696103864
-floor,Logistic Regression with l2 Penalty,both,0,floor,54,136,-1.497175507188474
-great,Logistic Regression with l2 Penalty,both,0,great,61,141,-1.190996832128641
-small,Logistic Regression with l2 Penalty,both,0,small,44,104,-1.1735777924690487
+luxury,Logistic Regression with l2 Penalty,unigrams,1,luxury,67,5,1.322527008559783
+recently,Logistic Regression with l2 Penalty,unigrams,1,recently,65,15,1.2973462727465586
+experience,Logistic Regression with l2 Penalty,unigrams,1,experience,149,78,1.2395236807801882
+wife,Logistic Regression with l2 Penalty,unigrams,1,wife,70,23,1.1168125608039545
+smell,Logistic Regression with l2 Penalty,unigrams,1,smell,59,9,1.1142660470670387
+elevator,Logistic Regression with l2 Penalty,unigrams,0,elevator,13,93,-1.5313097952997377
+floor,Logistic Regression with l2 Penalty,unigrams,0,floor,54,136,-1.3395396483375483
+location,Logistic Regression with l2 Penalty,unigrams,0,location,48,136,-1.320955523582775
+great,Logistic Regression with l2 Penalty,unigrams,0,great,61,141,-1.1069729485711521
+small,Logistic Regression with l2 Penalty,unigrams,0,small,44,104,-1.0275452669024672
+recently stayed,Logistic Regression with l1 Penalty,bigrams,1,recently stayed,35,4,24.695734331671815
+took hour,Logistic Regression with l1 Penalty,bigrams,1,took hour,23,2,19.481225591913965
+luxury hotel,Logistic Regression with l1 Penalty,bigrams,1,luxury hotel,27,2,17.371874350754478
+cost room,Logistic Regression with l1 Penalty,bigrams,1,cost room,4,0,16.85309744030046
+spent weekend,Logistic Regression with l1 Penalty,bigrams,1,spent weekend,3,0,14.991396627678787
+called hotel,Logistic Regression with l1 Penalty,bigrams,0,called hotel,0,14,-16.541788987447653
+said bed,Logistic Regression with l1 Penalty,bigrams,0,said bed,0,3,-12.006904018231117
+booked hotel,Logistic Regression with l1 Penalty,bigrams,0,booked hotel,2,18,-11.29494992629599
+floor not,Logistic Regression with l1 Penalty,bigrams,0,floor not,2,9,-8.638768161077087
+valet service,Logistic Regression with l1 Penalty,bigrams,0,valet service,0,3,-8.571716823385897
+recently stayed,Logistic Regression with l2 Penalty,bigrams,1,recently stayed,35,4,0.018019818945618438
+took hour,Logistic Regression with l2 Penalty,bigrams,1,took hour,23,2,0.014982257708417124
+rock hotel,Logistic Regression with l2 Penalty,bigrams,1,rock hotel,22,5,0.014694459705968995
+hard rock,Logistic Regression with l2 Penalty,bigrams,1,hard rock,31,17,0.014387814692458742
+luxury hotel,Logistic Regression with l2 Penalty,bigrams,1,luxury hotel,27,2,0.013599433941198122
+star hotel,Logistic Regression with l2 Penalty,bigrams,0,star hotel,12,28,-0.011018418372320376
+booked hotel,Logistic Regression with l2 Penalty,bigrams,0,booked hotel,2,18,-0.010458542152032242
+bed bug,Logistic Regression with l2 Penalty,bigrams,0,bed bug,2,12,-0.00907036077156961
+room small,Logistic Regression with l2 Penalty,bigrams,0,room small,10,31,-0.009022462237193602
+bed comfortable,Logistic Regression with l2 Penalty,bigrams,0,bed comfortable,1,17,-0.008938088913773942
+recently,Logistic Regression with l1 Penalty,both,1,recently,65,15,19.92610941422993
+luxury,Logistic Regression with l1 Penalty,both,1,luxury,67,5,18.197350179924076
+smelled,Logistic Regression with l1 Penalty,both,1,smelled,53,12,14.743822035612228
+trouble,Logistic Regression with l1 Penalty,both,1,trouble,14,9,12.979678684873207
+decided,Logistic Regression with l1 Penalty,both,1,decided,69,17,12.941001499538173
+booked hotel,Logistic Regression with l1 Penalty,both,0,booked hotel,2,18,-16.991372091696554
+security,Logistic Regression with l1 Penalty,both,0,security,1,23,-12.44869918903188
+location,Logistic Regression with l1 Penalty,both,0,location,48,136,-12.299560664321424
+elevator,Logistic Regression with l1 Penalty,both,0,elevator,13,93,-11.821632486778274
+rate,Logistic Regression with l1 Penalty,both,0,rate,20,47,-11.740499407941261
+luxury,Logistic Regression with l2 Penalty,both,1,luxury,67,5,3.31890741051909
+recently,Logistic Regression with l2 Penalty,both,1,recently,65,15,3.1552420045300407
+wife,Logistic Regression with l2 Penalty,both,1,wife,70,23,2.813083272929847
+experience,Logistic Regression with l2 Penalty,both,1,experience,149,78,2.670627674573926
+decided,Logistic Regression with l2 Penalty,both,1,decided,69,17,2.640661792131461
+elevator,Logistic Regression with l2 Penalty,both,0,elevator,13,93,-3.8767643145919357
+floor,Logistic Regression with l2 Penalty,both,0,floor,54,136,-3.441524583301331
+location,Logistic Regression with l2 Penalty,both,0,location,48,136,-3.0508555843082417
+small,Logistic Regression with l2 Penalty,both,0,small,44,104,-2.6918899421610023
+great,Logistic Regression with l2 Penalty,both,0,great,61,141,-2.580956382631268

@@ -1,67 +1,67 @@
 model1,model2,chi2,p_value,alpha,reject
-Multinomial Naive Bayes_unigrams,Multinomial Naive Bayes_bigrams,6.564102564102564,0.010405619868873605,0.05,True
-Multinomial Naive Bayes_unigrams,Multinomial Naive Bayes_both,0.0,1.0,0.05,False
-Multinomial Naive Bayes_unigrams,Logistic Regression_unigrams,0.3076923076923077,0.5790997419539188,0.05,False
-Multinomial Naive Bayes_unigrams,Logistic Regression_bigrams,14.382978723404255,0.00014914439102564321,0.05,True
-Multinomial Naive Bayes_unigrams,Logistic Regression_both,1.7857142857142858,0.18144920772141646,0.05,False
-Multinomial Naive Bayes_unigrams,Classification Trees_unigrams,13.254901960784315,0.0002718680028822981,0.05,True
-Multinomial Naive Bayes_unigrams,Classification Trees_bigrams,17.56451612903226,2.77722529450432e-05,0.05,True
-Multinomial Naive Bayes_unigrams,Classification Trees_both,17.520833333333332,2.8417667670336965e-05,0.05,True
-Multinomial Naive Bayes_unigrams,Random Forests_unigrams,0.32142857142857145,0.5707503880581739,0.05,False
-Multinomial Naive Bayes_unigrams,Random Forests_bigrams,16.680851063829788,4.422516214795419e-05,0.05,True
-Multinomial Naive Bayes_unigrams,Random Forests_both,0.03333333333333333,0.8551321405847059,0.05,False
-Multinomial Naive Bayes_bigrams,Multinomial Naive Bayes_both,7.5,0.0061698993205441645,0.05,True
-Multinomial Naive Bayes_bigrams,Logistic Regression_unigrams,9.5,0.0020547189761318117,0.05,True
-Multinomial Naive Bayes_bigrams,Logistic Regression_bigrams,5.0625,0.024448945310089332,0.05,True
-Multinomial Naive Bayes_bigrams,Logistic Regression_both,13.82857142857143,0.0002002675749172096,0.05,True
-Multinomial Naive Bayes_bigrams,Classification Trees_unigrams,1.3064516129032258,0.2530381164947516,0.05,False
-Multinomial Naive Bayes_bigrams,Classification Trees_bigrams,5.019607843137255,0.025061844343883623,0.05,True
-Multinomial Naive Bayes_bigrams,Classification Trees_both,2.526315789473684,0.11196135426374809,0.05,False
-Multinomial Naive Bayes_bigrams,Random Forests_unigrams,3.3488372093023258,0.06725250426083074,0.05,False
-Multinomial Naive Bayes_bigrams,Random Forests_bigrams,3.78125,0.05182992721790985,0.05,False
-Multinomial Naive Bayes_bigrams,Random Forests_both,5.953488372093023,0.014688191945847787,0.05,True
-Multinomial Naive Bayes_both,Logistic Regression_unigrams,0.6428571428571429,0.4226780741706353,0.05,False
-Multinomial Naive Bayes_both,Logistic Regression_bigrams,15.625,7.722679550543406e-05,0.05,True
-Multinomial Naive Bayes_both,Logistic Regression_both,3.272727272727273,0.07044042927208799,0.05,False
-Multinomial Naive Bayes_both,Classification Trees_unigrams,12.5,0.00040695201744495946,0.05,True
-Multinomial Naive Bayes_both,Classification Trees_bigrams,17.35593220338983,3.099293441045215e-05,0.05,True
-Multinomial Naive Bayes_both,Classification Trees_both,16.680851063829788,4.422516214795419e-05,0.05,True
-Multinomial Naive Bayes_both,Random Forests_unigrams,0.14814814814814814,0.7003113729368903,0.05,False
-Multinomial Naive Bayes_both,Random Forests_bigrams,18.225,1.9628540586952144e-05,0.05,True
-Multinomial Naive Bayes_both,Random Forests_both,0.0,1.0,0.05,False
-Logistic Regression_unigrams,Logistic Regression_bigrams,18.282608695652176,1.9043784225322638e-05,0.05,True
-Logistic Regression_unigrams,Logistic Regression_both,1.3333333333333333,0.24821307898992026,0.05,False
-Logistic Regression_unigrams,Classification Trees_unigrams,17.520833333333332,2.8417667670336965e-05,0.05,True
-Logistic Regression_unigrams,Classification Trees_bigrams,21.24590163934426,4.039732062360006e-06,0.05,True
-Logistic Regression_unigrams,Classification Trees_both,21.78723404255319,3.0462024800424946e-06,0.05,True
-Logistic Regression_unigrams,Random Forests_unigrams,1.7142857142857142,0.19043026382552036,0.05,False
-Logistic Regression_unigrams,Random Forests_bigrams,20.891304347826086,4.8609626148791235e-06,0.05,True
-Logistic Regression_unigrams,Random Forests_both,0.17391304347826086,0.6766573217164242,0.05,False
-Logistic Regression_bigrams,Logistic Regression_both,23.813953488372093,1.0611045233272885e-06,0.05,True
-Logistic Regression_bigrams,Classification Trees_unigrams,0.013888888888888888,0.9061856157549283,0.05,False
-Logistic Regression_bigrams,Classification Trees_bigrams,0.8372093023255814,0.360196133386002,0.05,False
-Logistic Regression_bigrams,Classification Trees_both,0.07547169811320754,0.7835304977741095,0.05,False
-Logistic Regression_bigrams,Random Forests_unigrams,9.877551020408163,0.0016730747221523179,0.05,True
-Logistic Regression_bigrams,Random Forests_bigrams,0.041666666666666664,0.8382564863858263,0.05,False
-Logistic Regression_bigrams,Random Forests_both,14.382978723404255,0.00014914439102564321,0.05,True
-Logistic Regression_both,Classification Trees_unigrams,20.897959183673468,4.844104126359068e-06,0.05,True
-Logistic Regression_both,Classification Trees_bigrams,26.224137931034484,3.0399882945818115e-07,0.05,True
-Logistic Regression_both,Classification Trees_both,26.630434782608695,2.4633265485217063e-07,0.05,True
-Logistic Regression_both,Random Forests_unigrams,4.05,0.04417134490844271,0.05,True
-Logistic Regression_both,Random Forests_bigrams,26.88372093023256,2.1607121265531663e-07,0.05,True
-Logistic Regression_both,Random Forests_both,1.1363636363636365,0.2864220227778557,0.05,False
-Classification Trees_unigrams,Classification Trees_bigrams,0.41379310344827586,0.5200505273047948,0.05,False
-Classification Trees_unigrams,Classification Trees_both,0.06153846153846154,0.8040806574719614,0.05,False
-Classification Trees_unigrams,Random Forests_unigrams,10.297872340425531,0.0013318368153214168,0.05,True
-Classification Trees_unigrams,Random Forests_bigrams,0.013513513513513514,0.9074562823909351,0.05,False
-Classification Trees_unigrams,Random Forests_both,13.795918367346939,0.00020377845956151062,0.05,True
-Classification Trees_bigrams,Classification Trees_both,0.1875,0.6650055421020291,0.05,False
-Classification Trees_bigrams,Random Forests_unigrams,14.5,0.00014015954262956438,0.05,True
-Classification Trees_bigrams,Random Forests_bigrams,0.41025641025641024,0.5218393903336151,0.05,False
-Classification Trees_bigrams,Random Forests_both,20.166666666666668,7.09790833090828e-06,0.05,True
-Classification Trees_both,Random Forests_unigrams,13.020833333333334,0.00030804470562774666,0.05,True
-Classification Trees_both,Random Forests_bigrams,0.0,1.0,0.05,False
-Classification Trees_both,Random Forests_both,18.282608695652176,1.9043784225322638e-05,0.05,True
-Random Forests_unigrams,Random Forests_bigrams,12.25531914893617,0.000463933798350804,0.05,True
-Random Forests_unigrams,Random Forests_both,0.45,0.502334954360502,0.05,False
-Random Forests_bigrams,Random Forests_both,16.680851063829788,4.422516214795419e-05,0.05,True
+Multinomial Naive Bayes_unigrams,Multinomial Naive Bayes_bigrams,0.12903225806451613,0.7194375444233914,0.05,False
+Multinomial Naive Bayes_unigrams,Multinomial Naive Bayes_both,0.05,0.8230632737581214,0.05,False
+Multinomial Naive Bayes_unigrams,Logistic Regression_unigrams,0.0,1.0,0.05,False
+Multinomial Naive Bayes_unigrams,Logistic Regression_bigrams,1.3611111111111112,0.24334500914875914,0.05,False
+Multinomial Naive Bayes_unigrams,Logistic Regression_both,1.0416666666666667,0.30743416592739237,0.05,False
+Multinomial Naive Bayes_unigrams,Classification Trees_unigrams,8.816666666666666,0.0029849144276154972,0.05,True
+Multinomial Naive Bayes_unigrams,Classification Trees_bigrams,19.01388888888889,1.2977043509990056e-05,0.05,True
+Multinomial Naive Bayes_unigrams,Classification Trees_both,4.982758620689655,0.02560112917755574,0.05,True
+Multinomial Naive Bayes_unigrams,Random Forests_unigrams,0.03333333333333333,0.8551321405847059,0.05,False
+Multinomial Naive Bayes_unigrams,Random Forests_bigrams,7.22,0.007209570764742524,0.05,True
+Multinomial Naive Bayes_unigrams,Random Forests_both,0.5517241379310345,0.4576140668763148,0.05,False
+Multinomial Naive Bayes_bigrams,Multinomial Naive Bayes_both,0.16,0.6891565167793516,0.05,False
+Multinomial Naive Bayes_bigrams,Logistic Regression_unigrams,0.32142857142857145,0.5707503880581739,0.05,False
+Multinomial Naive Bayes_bigrams,Logistic Regression_bigrams,0.8421052631578947,0.3587953578869416,0.05,False
+Multinomial Naive Bayes_bigrams,Logistic Regression_both,2.3703703703703702,0.12365771040283367,0.05,False
+Multinomial Naive Bayes_bigrams,Classification Trees_unigrams,7.017543859649122,0.008071487425268014,0.05,True
+Multinomial Naive Bayes_bigrams,Classification Trees_bigrams,19.593220338983052,9.580857198511218e-06,0.05,True
+Multinomial Naive Bayes_bigrams,Classification Trees_both,3.843137254901961,0.04994997645474623,0.05,True
+Multinomial Naive Bayes_bigrams,Random Forests_unigrams,0.41025641025641024,0.5218393903336151,0.05,False
+Multinomial Naive Bayes_bigrams,Random Forests_bigrams,6.918918918918919,0.008528852154051912,0.05,True
+Multinomial Naive Bayes_bigrams,Random Forests_both,0.025,0.8743670611628918,0.05,False
+Multinomial Naive Bayes_both,Logistic Regression_unigrams,0.0,1.0,0.05,False
+Multinomial Naive Bayes_both,Logistic Regression_bigrams,1.6333333333333333,0.20124262095772028,0.05,False
+Multinomial Naive Bayes_both,Logistic Regression_both,1.0416666666666667,0.30743416592739237,0.05,False
+Multinomial Naive Bayes_both,Classification Trees_unigrams,10.173076923076923,0.0014250625619923734,0.05,True
+Multinomial Naive Bayes_both,Classification Trees_bigrams,20.13235294117647,7.226389988223059e-06,0.05,True
+Multinomial Naive Bayes_both,Classification Trees_both,5.160714285714286,0.023103393801764092,0.05,True
+Multinomial Naive Bayes_both,Random Forests_unigrams,0.03125,0.8596837951986661,0.05,False
+Multinomial Naive Bayes_both,Random Forests_bigrams,7.8478260869565215,0.005088185461451067,0.05,True
+Multinomial Naive Bayes_both,Random Forests_both,0.5161290322580645,0.47249761400068846,0.05,False
+Logistic Regression_unigrams,Logistic Regression_bigrams,1.9393939393939394,0.1637343543245882,0.05,False
+Logistic Regression_unigrams,Logistic Regression_both,2.2857142857142856,0.1305700181157369,0.05,False
+Logistic Regression_unigrams,Classification Trees_unigrams,10.472727272727273,0.0012114973654306278,0.05,True
+Logistic Regression_unigrams,Classification Trees_bigrams,21.55223880597015,3.443205011169126e-06,0.05,True
+Logistic Regression_unigrams,Classification Trees_both,7.2,0.00729035809153566,0.05,True
+Logistic Regression_unigrams,Random Forests_unigrams,0.0,1.0,0.05,False
+Logistic Regression_unigrams,Random Forests_bigrams,9.75609756097561,0.0017872890369872703,0.05,True
+Logistic Regression_unigrams,Random Forests_both,0.8333333333333334,0.3613104285261789,0.05,False
+Logistic Regression_bigrams,Logistic Regression_both,5.28125,0.021556266760016273,0.05,True
+Logistic Regression_bigrams,Classification Trees_unigrams,3.8793103448275863,0.0488846339161811,0.05,True
+Logistic Regression_bigrams,Classification Trees_bigrams,14.5,0.00014015954262956438,0.05,True
+Logistic Regression_bigrams,Classification Trees_both,1.6875,0.19393085228240695,0.05,False
+Logistic Regression_bigrams,Random Forests_unigrams,2.1315789473684212,0.1442920554401011,0.05,False
+Logistic Regression_bigrams,Random Forests_bigrams,3.5588235294117645,0.0592297037272794,0.05,False
+Logistic Regression_bigrams,Random Forests_both,0.11428571428571428,0.7353166906373405,0.05,False
+Logistic Regression_both,Classification Trees_unigrams,15.017857142857142,0.000106498661839818,0.05,True
+Logistic Regression_both,Classification Trees_bigrams,28.015151515151516,1.2036929715027667e-07,0.05,True
+Logistic Regression_both,Classification Trees_both,12.022727272727273,0.0005255574382728422,0.05,True
+Logistic Regression_both,Random Forests_unigrams,0.34615384615384615,0.5562984612747348,0.05,False
+Logistic Regression_both,Random Forests_bigrams,15.625,7.722679550543406e-05,0.05,True
+Logistic Regression_both,Random Forests_both,3.7037037037037037,0.054291828366854686,0.05,False
+Classification Trees_unigrams,Classification Trees_bigrams,3.017857142857143,0.0823522150528067,0.05,False
+Classification Trees_unigrams,Classification Trees_both,0.4807692307692308,0.48807409316524786,0.05,False
+Classification Trees_unigrams,Random Forests_unigrams,13.58695652173913,0.00022776260245036984,0.05,True
+Classification Trees_unigrams,Random Forests_bigrams,0.16071428571428573,0.6884997410966343,0.05,False
+Classification Trees_unigrams,Random Forests_both,6.8936170212765955,0.008650405895097536,0.05,True
+Classification Trees_bigrams,Classification Trees_both,6.224137931034483,0.01260202493993626,0.05,True
+Classification Trees_bigrams,Random Forests_unigrams,22.36764705882353,2.2513477874830012e-06,0.05,True
+Classification Trees_bigrams,Random Forests_bigrams,7.605263157894737,0.0058198169540098505,0.05,True
+Classification Trees_bigrams,Random Forests_both,16.78688524590164,4.182134200161693e-05,0.05,True
+Classification Trees_both,Random Forests_unigrams,8.595238095238095,0.0033704314473977145,0.05,True
+Classification Trees_both,Random Forests_bigrams,0.020833333333333332,0.8852339144732015,0.05,False
+Classification Trees_both,Random Forests_both,3.5121951219512195,0.06091869077971672,0.05,False
+Random Forests_unigrams,Random Forests_bigrams,8.82,0.002979466656332983,0.05,True
+Random Forests_unigrams,Random Forests_both,2.1176470588235294,0.1456100953968629,0.05,False
+Random Forests_bigrams,Random Forests_both,4.558139534883721,0.032762645078859856,0.05,True
