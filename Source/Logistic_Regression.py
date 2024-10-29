@@ -45,7 +45,7 @@ class Logreg:
         self.model = None
         self.penalty = penalty
 
-    def train(self, X_train, y_train, Cs=[0.0001, 0.001, 0.01, 0.1, 1.0, 10], cv=5):
+    def train(self, X_train, y_train, Cs=[0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100], cv=5):
         """
            Trains the Logistic Regression model using LogisticRegressionCV to find the best C
            and performs optional feature selection.
@@ -217,7 +217,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         df_combined_counts = model.get_top_k_features(vectorizer, model_name, dataset_name, k=5)
 
         write_mode = 'w' if dataset_name == 'unigrams' else 'a'
-        write_header = False if dataset_name == 'both' else True
+        write_header = dataset_name == 'unigrams'
         df_combined_counts.to_csv("../Output/top_k_features.csv", mode=write_mode, header=write_header)
 
         if df_scores['accuracy'] > max_accuracy:
