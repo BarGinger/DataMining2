@@ -175,29 +175,33 @@ def plot_scores_as_lines(df_scores):
     # df_melted.to_csv("Output/df_melted.csv", sep='\t', encoding='utf-8')
 
     # Create the line plot
-    plt.figure(figsize=(20, 16))
+    plt.figure(figsize=(4.54,4.54), dpi=800)
     # Create a FacetGrid for the plot
     g = sns.FacetGrid(df_melted, col='dataset_name', hue='metric', sharex=False, sharey=False, height=5, aspect=1.5)
     g.map(sns.lineplot, 'feature_count', 'value')
 
     # Add titles and labels
-    g.set_axis_labels("Feature Count", "Score", fontsize=16)
-    g.set_titles("{col_name}", size=18)
-    g.add_legend(title="Metrics", title_fontsize=20, fontsize=15)
-    g.fig.suptitle("Evaluating Multinomial Naive Bayes: Performance Metrics Based on Feature Count and N-Gram Selection", fontsize=20, y=1.0002)
+    g.set_axis_labels("Feature Count", "Score", fontsize=17.5)
+    g.set_titles("{col_name}", size=25)
+    g.add_legend(title="Metrics", title_fontsize=28, fontsize=20)
+    g.fig.suptitle("Evaluating Multinomial Naive Bayes: Performance Metrics Based on Feature Count and N-Gram Selection",
+                   fontsize=26,
+                   y=1.0002,
+                   color='navy',
+                   fontweight='bold')
 
     legend = g.legend
     legend.set_title("Metrics")
-    legend.get_title().set_fontsize(16)  # Legend title font size
+    legend.get_title().set_fontsize(25)  # Legend title font size
     for text in legend.get_texts():
-        text.set_fontsize(14)  # Legend label font size
-    g.set_xticklabels(fontsize=12)
-    g.set_yticklabels(fontsize=12)
+        text.set_fontsize(22)  # Legend label font size
+    g.set_xticklabels(fontsize=14)
+    g.set_yticklabels(fontsize=16)
 
 
     plt.subplots_adjust(top=0.8)
     file_name = "../Output/Multinomial Naive Bayes performance Metrics.png"
-    plt.savefig(file_name, dpi=450)
+    plt.savefig(file_name, dpi=800)
     plt.show()
 
 
