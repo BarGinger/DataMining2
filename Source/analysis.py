@@ -15,7 +15,7 @@ from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from wordcloud import WordCloud
 
-from main import get_df, FAKE, EVALUATIONS_FILENAME
+from utils import get_df, FAKE, EVALUATIONS_FILENAME
 
 
 def create_word_cloud(words: str, title: str):
@@ -162,7 +162,7 @@ def plot_scores_as_lines(df_scores):
     None
     """
 
-    df_mnb = df_scores[df_scores['model_name'].str.startswith('Multinomial Naive Bayes')]
+    df_mnb = df_scores[df_scores['model_name'].str.startswith('Multinomial Naive Bayes')].copy()
     df_mnb['feature_count'] = df_mnb['model_name'].str.extract(r'\(#(\d+) features\)')
 
     columns_to_keep = ['feature_count', 'dataset_name', 'accuracy', 'f1', 'precision', 'recall']
@@ -191,10 +191,6 @@ def plot_scores_as_lines(df_scores):
     legend.get_title().set_fontsize(16)  # Legend title font size
     for text in legend.get_texts():
         text.set_fontsize(14)  # Legend label font size
-
-
-    # Increase the size of axis tick labels
-    # Increase the size of axis tick labels without triggering the warning
     g.set_xticklabels(fontsize=12)
     g.set_yticklabels(fontsize=12)
 

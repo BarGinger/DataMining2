@@ -10,25 +10,22 @@ from operator import index
 
 import spacy
 from tabulate import tabulate
-import os
 import nltk
-import re
-import zipfile
-import numpy as np
-import pandas as pd
-from io import TextIOWrapper
-from enum import Enum
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from scipy.optimize import differential_evolution
 from mlxtend.evaluate import mcnemar, mcnemar_table
 from sklearn.model_selection import train_test_split
-
 import utils
 import Multinomial_Naive_Bayes as MNB
 import Logistic_Regression as LR
 import Classification_Trees as CLT
 import Random_Forests as RF
+import re
+import pandas as pd
+import zipfile
+from io import TextIOWrapper
+import spacy
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from typing import List
 
 nltk.download('wordnet', quiet=True)
 nltk.download('stopwords', quiet=True)
@@ -45,22 +42,6 @@ except OSError:
 PREPROCESSED_FILENAME = r"..\Data\preprocessed_df.csv"
 EVALUATIONS_FILENAME = r"..\Output\df_evaluations.csv"
 STATISTICAL_ANALYSIS_FILENAME = r"..\Output\df_statistical_analysis.csv"
-
-
-class FAKE(Enum):
-    """ Enumeration for labeling review authenticity. """
-    TRUTHFUL = 0
-    DECEPTIVE = 1
-
-
-import re
-import pandas as pd
-import zipfile
-from io import TextIOWrapper
-import spacy
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from typing import List
 
 
 def clean_text(text: str) -> str:
@@ -202,7 +183,7 @@ def read_zip(zip_file_path: str) -> pd.DataFrame:
                     # Determine if review is deceptive or truthful based on filename
                     if "negative" in file_info.filename:
                         # Determine if review is deceptive or truthful based on filename
-                        is_fake = FAKE.DECEPTIVE if "deceptive" in file_info.filename else FAKE.TRUTHFUL
+                        is_fake = utils.FAKE.DECEPTIVE if "deceptive" in file_info.filename else utils.FAKE.TRUTHFUL
                         # Extract hotel name from filename
                         hotel_name = file_info.filename.split('/')[-1].split('_')[1]  # The hotel name is the second part
                         hotel_names.append(hotel_name)
@@ -241,20 +222,6 @@ def preprocess():
     df = read_zip(r"..\Data\op_spam_v1.4.zip")
     df.to_csv(PREPROCESSED_FILENAME, index=False)
     print(f"preprocess data was saved into the following file: {PREPROCESSED_FILENAME}")
-    return df
-
-
-def get_df():
-    """
-    Load the preprocessed DataFrame from CSV.
-
-    Returns:
-    -------
-    pd.DataFrame
-        A DataFrame containing the preprocessed reviews and their labels.
-    """
-    df = pd.read_csv(PREPROCESSED_FILENAME)
-    df['is_fake'] = df['is_fake'].apply(lambda x: FAKE[x.split('.')[1]])
     return df
 
 

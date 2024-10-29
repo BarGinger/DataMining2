@@ -16,7 +16,29 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.linear_model import LogisticRegression
-from main import  FAKE, get_df
+from enum import Enum
+
+PREPROCESSED_FILENAME = r"..\Data\preprocessed_df.csv"
+EVALUATIONS_FILENAME = r"..\Output\df_evaluations.csv"
+STATISTICAL_ANALYSIS_FILENAME = r"..\Output\df_statistical_analysis.csv"
+
+class FAKE(Enum):
+    """ Enumeration for labeling review authenticity. """
+    TRUTHFUL = 0
+    DECEPTIVE = 1
+
+def get_df():
+    """
+    Load the preprocessed DataFrame from CSV.
+
+    Returns:
+    -------
+    pd.DataFrame
+        A DataFrame containing the preprocessed reviews and their labels.
+    """
+    df = pd.read_csv(PREPROCESSED_FILENAME)
+    df['is_fake'] = df['is_fake'].apply(lambda x: FAKE[x.split('.')[1]])
+    return df
 
 
 def create_folds(X, y, n_folds=8):
