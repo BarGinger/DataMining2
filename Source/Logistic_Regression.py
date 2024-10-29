@@ -203,7 +203,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     # loop over Regularization type ('l1' or 'l2')
     for penalty in ['l1', 'l2']:
-        print(f"Running Logistic Regression with {penalty} regularization.")
+        print(f"Running Logistic Regression (with {penalty} regularization)")
         model = Logreg(penalty=penalty)
         params = model.train(X_train, y_train)
         y_pred = model.predict(X_test)
@@ -211,7 +211,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         # Evaluate model performance
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
 
-        model_name = f'Logistic Regression with {penalty} Penalty'
+        model_name = f'Logistic Regression (with {penalty} Penalty)'
 
         # Get top and bottom features for analysis
         df_combined_counts = model.get_top_k_features(vectorizer, model_name, dataset_name, k=5)
