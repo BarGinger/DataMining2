@@ -6,8 +6,10 @@ Student 3: Mohammed Bashabeeb, student number: 7060424
 Date: September 12, 2024
 Description: Assignment 2 - Classification for the Detection of Opinion Spam
 """
+from operator import index
 
 import spacy
+from tabulate import tabulate
 import os
 import nltk
 import re
@@ -20,6 +22,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from scipy.optimize import differential_evolution
 from mlxtend.evaluate import mcnemar, mcnemar_table
+from sklearn.model_selection import train_test_split
 
 import utils
 import Multinomial_Naive_Bayes as MNB
@@ -31,16 +34,17 @@ nltk.download('wordnet', quiet=True)
 nltk.download('stopwords', quiet=True)
 
 # Check if the Spacy model is already installed, download if not
-model_name = "en_core_web_sm"
+model_to_download = "en_core_web_sm"
 try:
-    nlp = spacy.load(model_name)
+    nlp = spacy.load(model_to_download)
 except OSError:
     from spacy.cli import download
-    download(model_name)
-    nlp = spacy.load(model_name)
+    download(model_to_download)
+    nlp = spacy.load(model_to_download)
 
 PREPROCESSED_FILENAME = r"..\Data\preprocessed_df.csv"
 EVALUATIONS_FILENAME = r"..\Output\df_evaluations.csv"
+STATISTICAL_ANALYSIS_FILENAME = r"..\Output\df_statistical_analysis.csv"
 
 
 class FAKE(Enum):
@@ -49,7 +53,17 @@ class FAKE(Enum):
     DECEPTIVE = 1
 
 
-def clean_text(text):
+import re
+import pandas as pd
+import zipfile
+from io import TextIOWrapper
+import spacy
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from typing import List
+
+
+def clean_text(text: str) -> str:
     """
     Clean text by removing HTML tags, numbers, and punctuation, and converting to lowercase.
 
@@ -63,69 +77,101 @@ def clean_text(text):
     str
         The cleaned text.
     """
-    text = re.sub('<[^<]+?>', '', text)  # Remove HTML tags
-    text = re.sub(r'\d+', '', text)       # Remove numbers
-    text = " ".join([word for word in text.split() if word.isalpha()])  # Remove non-alphabetic characters
-    text = re.sub(r'[^\w\s]', '', text)   # Remove punctuation
+    # Replace contractions
+    text = re.sub(r"n't", " not", text)
+    text = re.sub(r"'ve", " have", text)
+    text = re.sub(r"'re", " are", text)
+    text = re.sub(r"'ll", " will", text)
+    text = re.sub(r"'m", " am", text)
+    text = re.sub(r"'d", " would", text)
 
-    return text.lower()
+    # Remove HTML tags
+    text = re.sub('<[^<]+?>', '', text)
+
+    # Replace numbers with space (instead of empty string)
+    text = re.sub(r'\d+', ' ', text)
+
+    # Replace punctuation with space (instead of removing directly)
+    text = re.sub(r'[^\w\s]', ' ', text)
+
+    # Convert to lowercase
+    text = text.lower()
+
+    # Replace multiple spaces with single space
+    text = re.sub(r'\s+', ' ', text)
+
+    return text.strip()
 
 
-def preprocess_text_batch(texts: list, hotel_names: list):
+def preprocess_text_batch(texts: List[str], hotel_names: List[str]) -> List[str]:
     """
-    Preprocess a batch of texts using Named Entity Recognition (NER) and Part-of-Speech (POS) tagging
-    to remove proper nouns, named entities, and hotel names.
+    Preprocess a batch of texts using NER and POS tagging to remove proper nouns,
+    named entities, and hotel names.
 
     Parameters:
     ----------
-    texts : list
+    texts : List[str]
         A list of text strings to preprocess.
-    hotel_names : list
+    hotel_names : List[str]
         A list of hotel names to be removed from the reviews.
 
     Returns:
     -------
-    list
+    List[str]
         A list of preprocessed text strings.
     """
     processed_texts = []
-    cleaned_texts = [clean_text(text) for text in texts]  # Clean texts first to reduce workload for Spacy
+    cleaned_texts = [clean_text(text) for text in texts]
 
-    # Use Spacy's pipe for batch processing with optimized settings
-    with nlp.disable_pipes("ner", "parser"):  # Disable unnecessary components for efficiency
+    # Use Spacy's pipe for batch processing
+    with nlp.disable_pipes("ner", "parser"):
         docs = nlp.pipe(cleaned_texts, batch_size=100, n_process=2)
 
+    # Get stop words
     stop_words = set(stopwords.words('english'))
     stop_words.update(spacy.lang.en.stop_words.STOP_WORDS)
+
+    # Remove certain words from stop words that might be important for sentiment
+    words_to_keep = {'not', 'no', 'nor', 'neither', 'never', 'none'}
+    stop_words = stop_words - words_to_keep
+
     lemmatizer = WordNetLemmatizer()
 
     for doc, hotel_name in zip(docs, hotel_names):
-        # Remove tokens identified as proper nouns (PROPN) and named entities (PERSON, GPE)
-        cleaned_tokens = [
-            token.text for token in doc
-            if not (token.pos_ in ["PROPN"] or token.ent_type_ in ["PERSON", "GPE"])
-        ]
+        # Process tokens with improved filtering
+        tokens = []
+        for token in doc:
+            # Skip if token is a proper noun or named entity
+            if token.pos_ in ["PROPN"] or token.ent_type_ in ["PERSON", "GPE"]:
+                continue
 
-        # Remove the hotel name if it exists in the tokens
-        cleaned_tokens = [token for token in cleaned_tokens if token.lower() != hotel_name.lower()]
-        # Stopword removal before lemmatization
-        tokens_without_stopwords = [token for token in cleaned_tokens if token not in stop_words]
+            text = token.text.lower()
 
-        # Lemmatization after stopword removal
-        lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens_without_stopwords]
+            # Skip if token matches hotel name
+            if text == hotel_name.lower():
+                continue
 
-        # Remove tokens that may contain numbers or undesired patterns
-        lemmatized_tokens = [
-            token for token in lemmatized_tokens
-            if not re.fullmatch(r'\d+', token) and  # Remove tokens that are purely digits
-               not re.search(r'\bth\b', token) and  # Remove tokens like 'th'
-               not re.search(r'\d', token) and  # Remove tokens containing digits
-               len(token) > 1  # Remove single character tokens
-        ]
+            # Skip if token is in stop words
+            if text in stop_words:
+                continue
 
-        # Join the tokens back into a string
-        preprocessed_text = ' '.join(lemmatized_tokens)
-        processed_texts.append(preprocessed_text)
+            # Skip if token contains unwanted patterns
+            if (len(text) <= 1 or  # Single characters
+                    text.isdigit() or  # Pure digits
+                    re.search(r'\bth\b', text) or  # 'th'
+                    re.search(r'\d', text)):  # Contains any digits
+                continue
+
+            # Lemmatize the token
+            lemmatized = lemmatizer.lemmatize(text)
+
+            # Only add if the lemmatized form is valid
+            if len(lemmatized) > 1 and lemmatized.isalpha():
+                tokens.append(lemmatized)
+
+        # Join tokens with space and add to results
+        processed_text = ' '.join(tokens)
+        processed_texts.append(processed_text)
 
     return processed_texts
 
@@ -212,94 +258,100 @@ def get_df():
     return df
 
 
-def get_datasets(use_bigrams=False):
+def get_datasets():
     """
     Extract features from the preprocessed DataFrame and split it into training and testing datasets.
-
-    Parameters:
-    ----------
-    use_bigrams : bool
-        Whether to include bigrams in feature extraction.
 
     Returns:
     -------
     tuple
-        A tuple containing the training and testing datasets (X_train, y_train, X_test, y_test, vectorizer).
+        A tuple containing the training and testing datasets (X_train, y_train, X_test, y_test).
     """
     df = get_df()
-    X, y, vectorizer = utils.extract_features(df=df, use_bigrams=use_bigrams)
-    X_train, X_test, y_train, y_test = utils.split_into_train_test(X=X, y=y)
-    return X_train, y_train, X_test, y_test, vectorizer
+    X, y = df['review'], df['is_fake'].apply(lambda x: 1 if x.name == "DECEPTIVE" else 0)
 
+    X_unigrams, vectorizer_unigram = utils.extract_features(reviews=X, ngram_range= (1, 1))
+    X_bigrams, vectorizer_bigrams = utils.extract_features(reviews=X, ngram_range=(2, 2))
+    X_both, vectorizer_both = utils.extract_features(reviews=X, ngram_range=(1, 2))
 
-def get_datasets_wrapper(use_bigrams):
-    """
-    Wrapper function to get datasets and store them in a dictionary.
+    _, _, train_indices, test_indices = train_test_split(
+        X_unigrams, range(len(X_unigrams)), test_size=0.2, random_state=42)
 
-    Parameters:
-    ----------
-    use_bigrams : bool
-        Whether to use bigrams or not.
+    # Use the indices to split both unigram and bigram datasets
+    train_unigrams = X_unigrams[train_indices]
+    test_unigrams = X_unigrams[test_indices]
 
-    Returns:
-    -------
-    datasets : tuple
-        A tuple containing the datasets (X_train, X_test, y_train, y_test, vectorizer).
-    """
-    return get_datasets(use_bigrams=use_bigrams)
+    train_bigrams = X_bigrams[train_indices]
+    test_bigrams = X_bigrams[test_indices]
+
+    train_both = X_both[train_indices]
+    test_both = X_both[test_indices]
+
+    y_train = y[train_indices]
+    y_test = y[test_indices]
+
+    datasets_dict = {
+        'unigrams': (train_unigrams, y_train, test_unigrams, y_test, vectorizer_unigram),
+        'bigrams': (train_bigrams, y_train, test_bigrams, y_test, vectorizer_bigrams),
+        'both': (train_both, y_train, test_both, y_test, vectorizer_both)
+    }
+
+    return datasets_dict
 
 
 def  run_all_models():
     """
-    Run all specified models on both unigram and bigram datasets, evaluate their performance,
+    Run all specified models on both unigram and bigram and a combo of both datasets, evaluate their performance,
     and save the evaluation results to a CSV file.
-    """
-    # Dictionary to store datasets
-    datasets_dict = {
-        'unigrams': get_datasets_wrapper(use_bigrams=False),
-        'bigrams': get_datasets_wrapper(use_bigrams=True)
-    }
 
-    # iterate over all the models, for each one train and predict on unigrams and bigrams datasets
+    Returns:
+    --------
+    models: dictionary
+        A dictionary with model names as keys ({model_name}_{dataset_name}) and their respective predictions as values.
+    datasets_dict: dictionary
+        A dictionary containing the train and test datasets for both unigrams and bigrams and a combo of both
+    """
+
+    datasets_dict = get_datasets()
+
+    # iterate over all the models, for each one train and predict on unigrams and bigrams datasets and a combo of both
     models = [
-        # {
-        #     "model_name": "Multinomial Naive Bayes",
-        #     "model_run_method": MNB.run_the_model
-        # },
         {
-            "model_name": "Logistic Regression with Lasso Penalty",
+            "model_name": "Multinomial Naive Bayes",
+            "model_run_method": MNB.run_the_model
+        },
+        {
+            "model_name": "Logistic Regression",
             "model_run_method": LR.run_the_model
         },
-        # {
-            # "model_name": "Classification Trees",
-            # "model_run_method": CLT.run_the_model
-        # },
-        # {
-        #     "model_name": "Random Forests",
-        #     "model_run_method": RF.run_the_model
-        # }
+        {
+            "model_name": "Classification Trees",
+            "model_run_method": CLT.run_the_model
+        },
+        {
+            "model_name": "Random Forests",
+            "model_run_method": RF.run_the_model
+        }
     ]
 
     df_evaluations = pd.DataFrame(columns=[
-        'model_name', 'dataset_name', 'accuracy', 'precision', 'recall', 'f1',
-        'top_5_features_deceptive', 'top_5_features_truthful',
-        'bottom_5_features_deceptive', 'bottom_5_features_truthful'
+        'model_name', 'dataset_name', 'accuracy', 'precision', 'recall', 'f1'
     ])
-    
-    # Dictionary to store predictions from each model
-    all_model_preds = {}
+
+    df_4_statistical_analysis = {}
 
     for model_info in models:
             print("######################################################")
-            print(f"Running model - {model_info['model_name']}")
+            model_name = model_info['model_name']
+            print(f"Running model - {model_name}")
             model_run_method = model_info["model_run_method"]
 
             for dataset_name, dataset in datasets_dict.items():
-                print(f"Running model - {model_info['model_name']} with {dataset_name}")
+                print(f"Running model - {model_name} with {dataset_name}")
                 df_evaluation, y_pred = model_run_method(dataset_name, *dataset)
 
                 # Store predictions for statistical testing
-                all_model_preds[f"{model_info['model_name']} ({dataset_name})"] = y_pred
+                df_4_statistical_analysis[f'{model_name}_{dataset_name}'] = y_pred
 
                 if df_evaluations.empty:
                     df_evaluations = df_evaluation
@@ -308,7 +360,10 @@ def  run_all_models():
 
     df_evaluations.to_csv(EVALUATIONS_FILENAME, index=False)
     print(f"df_evaluations was saved into {EVALUATIONS_FILENAME}")
-    print("Done with all models!")
+    print(tabulate(df_evaluations, headers='keys', tablefmt='pretty'))
+    
+    print("Done with training all models!")
+    return df_4_statistical_analysis, datasets_dict
     
     
     
@@ -358,31 +413,37 @@ def mcnemar_test(contingency_matrix):
 
 
 # Function to compare all four models in pairs using McNemar's test
-def compare_all_models(true_labels, model_preds):
+import pandas as pd
+
+def compare_all_models(datasets_dict, model_preds):
     """
     Compare four models pairwise using McNemar's test.
 
     Parameters:
     -----------
-    true_labels : array-like
-        Ground truth labels.
+    datasets_dict : dict
+        Dictionary of the different datasets used in this program.
     model_preds : dict
         A dictionary with model names as keys and their respective predictions as values.
 
     Returns:
     --------
-    results : dict
-        A dictionary with chi-squared statistics and p-values for all pairwise comparisons.
+    df_statistical_analysis : pd.DataFrame
+        A DataFrame with chi-squared statistics and p-values for all pairwise comparisons.
     """
     model_names = list(model_preds.keys())
-    results = {}
+    results = []
     alpha = 0.05  # significance level
+
+    # Assuming 'unigrams' dataset and index [3] for true labels
+    true_labels = datasets_dict['unigrams'][3]
 
     for i in range(len(model_names)):
         for j in range(i + 1, len(model_names)):
             model1, model2 = model_names[i], model_names[j]
             print(f"\nComparison: {model1} vs {model2}")
 
+            # Obtain the contingency matrix and run McNemar's test
             cm = get_contingency_matrix(true_labels, model_preds[model1], model_preds[model2])
             chi2_stat, p_val = mcnemar_test(cm)
 
@@ -393,24 +454,28 @@ def compare_all_models(true_labels, model_preds):
             else:
                 print(f"p-value = {p_val:.4f}, which is greater than {alpha}.")
                 print(f"We fail to reject the null hypothesis (H₀). {model1} and {model2} do not have significantly different accuracies.")
-            
-            results[f"{model1}_vs_{model2}"] = {'chi2': chi2_stat, 'p_value': p_val}
 
-    return results
+            # Append results as a dictionary for each pair
+            results.append({
+                'model1': model1,
+                'model2': model2,
+                'chi2': chi2_stat,
+                'p_value': p_val
+            })
 
+    # Convert results to a DataFrame
+    df_statistical_analysis = pd.DataFrame(results)
+    df_statistical_analysis.to_csv(STATISTICAL_ANALYSIS_FILENAME, index=False)
+    return df_statistical_analysis
 
 
 if __name__ == "__main__":
     # Uncomment to preprocess data before running models, we only need to run this once
     # preprocess()
-    run_all_models()
-    
-    
-    "TODO: ----------------------------------------------"
-    true_labels = " "
+    df_4_statistical_analysis, datasets_dict = run_all_models()
     
     # Perform statistical testing on the predictions
     # true_labels = datasets_dict['unigrams'][3]  # Assuming y_test is the fourth item in the tuple
-    # This varible will only work when we run the codes and we have the y_pred ready for each model
-    compare_all_models(true_labels, )
+    # This variable will only work when we run the codes and we have the y_pred ready for each model
+    compare_all_models(datasets_dict, df_4_statistical_analysis)
 

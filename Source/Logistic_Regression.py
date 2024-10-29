@@ -1,5 +1,5 @@
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegressionCV
 import numpy as np
 import pandas as pd
 import utils
@@ -7,8 +7,8 @@ import utils
 
 class Logreg:
     """
-    Logistic Regression model with L1 (Lasso) or L2 (Ridge) regularization for text classification.
-
+    Logistic Regression model with Lasso (L1) or Ridge (L2) regularization for text classification.
+    
     Attributes:
     -----------
     model : LogisticRegression
@@ -45,47 +45,51 @@ class Logreg:
         self.model = None
         self.penalty = penalty
 
-    def train(self, X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5):
+    def train(self, X_train, y_train, Cs=[0.0001, 0.001, 0.01, 0.1, 1.0, 10], cv=5):
         """
-        Trains the Logistic Regression model using cross-validation to find the best C.
-        
-        Parameters:
-        -----------
-        X_train : array-like of shape (n_samples, n_features)
-            Training data features.
-        y_train : array-like of shape (n_samples,)
-            Training data labels.
-        Cs : list, optional
-            List of C values for cross-validation (default is [0.01, 0.1, 1.0, 10]).
-        cv : int, optional
-            Number of cross-validation folds (default is 5).
-        
-        Returns:
-        --------
-        None
-        """
-        # Select the solver based on penalty type
-        solver = 'liblinear' if self.penalty == 'l1' else 'lbfgs'
+           Trains the Logistic Regression model using LogisticRegressionCV to find the best C
+           and performs optional feature selection.
 
-        # Use GridSearchCV to find the optimal C value
-        param_grid = {'C': Cs}
-        grid = GridSearchCV(LogisticRegression(penalty=self.penalty, solver=solver, max_iter=1000),
-                            param_grid, cv=cv, scoring='accuracy')
-        grid.fit(X_train, y_train)
+           Parameters:
+           -----------
+           X_train : array-like of shape (n_samples, n_features)
+               Training data features.
+           y_train : array-like of shape (n_samples,)
+               Training data labels.
+           Cs : list, optional
+               List of C values for cross-validation (default is [0.001, 0.01, 0.1, 1.0, 10]).
+           cv : int, optional
+               Number of cross-validation folds (default is 5).
+           min_coef_threshold : float, optional
+               Minimum absolute coefficient threshold for feature selection (default is 0.1).
 
-        # Store the best model after cross-validation
-        self.model = grid.best_estimator_
-        print(f"Best C: {self.model.C}")
+           Returns:
+           --------
+           None
+           """
+        # Set up LogisticRegressionCV with penalty, Cs, and cross-validation
+        self.model = LogisticRegressionCV(
+            Cs=Cs,
+            cv=cv,
+            penalty=self.penalty,
+            solver='liblinear',
+            scoring='accuracy',
+            n_jobs=-1
+        )
+
+        # Fit model and automatically select the best C
+        self.model.fit(X_train, y_train)
+        print(f"Optimal C: {self.model.C_[0]}")
 
     def predict(self, X):
         """
         Predicts class labels for the input data.
-        
+
         Parameters:
         -----------
         X : array-like of shape (n_samples, n_features)
             Input data to predict.
-        
+
         Returns:
         --------
         y_pred : array-like of shape (n_samples,)
@@ -94,103 +98,125 @@ class Logreg:
         if not self.model:
             raise Exception("Model not initialized. Call the 'train' method first.")
 
+        if hasattr(self, 'selected_features_mask'):
+            X = X[:, self.selected_features_mask]
+
         y_pred = self.model.predict(X)
         return y_pred
 
-    def get_top_k_features(self, vectorizer, k=5):
+    def get_top_k_features(self, vectorizer, model_name, dataset_name, k=5):
         """
-        Returns the top k most influential features.
-        
+        Returns the top k most influential features for each class in a binary classification model,
+        with feature names and coefficients as separate entries.
+
         Parameters:
         -----------
         vectorizer : CountVectorizer or TfidfVectorizer
             The vectorizer used to transform the text data.
+        model_name : str
+            Name of the current model
+
+        dataset_name : str
+            Name of the dataset (e.g., unigrams or bigrams or both).
         k : int, optional
-            Number of top features to return (default is 5).
-        
+            Number of top features to return per class (default is 5).
+
         Returns:
         --------
-        top_k_features : array
-            Array containing the top k features.
+        top_features : Dataframe
+            a dataframe containing the top k feature names and their coefficients for each class with counts in each class.
         """
-        feature_importance = np.abs(self.model.coef_[0])
-        top_k_indices = np.argsort(feature_importance)[-k:]
+        # Get model coefficients and feature names
+        coef = self.model.coef_[0]
         feature_names = vectorizer.get_feature_names_out()
 
-        print(f"Top {k} features for classification: {feature_names[top_k_indices]}")
-        return feature_names[top_k_indices]
+        # Top k features pushing towards class 1 (most positive coefficients)
+        top_k_class_1_indices = np.argsort(coef)[-k:]
+        top_k_class_1_features = [feature_names[i] for i in top_k_class_1_indices[::-1]]
+        top_k_class_1_coefs = [coef[i] for i in top_k_class_1_indices[::-1]]
 
-    def get_bottom_k_features(self, vectorizer, k=5):
-        """
-        Returns the least k influential features.
-        
-        Parameters:
-        -----------
-        vectorizer : CountVectorizer or TfidfVectorizer
-            The vectorizer used to transform the text data.
-        k : int, optional
-            Number of bottom features to return (default is 5).
-        
-        Returns:
-        --------
-        bottom_k_features : array
-            Array containing the bottom k features.
-        """
-        feature_importance = np.abs(self.model.coef_[0])
-        bottom_k_indices = np.argsort(feature_importance)[:k]
-        feature_names = vectorizer.get_feature_names_out()
+        # Top k features pushing towards class 0 (most negative coefficients)
+        top_k_class_0_indices = np.argsort(coef)[:k]
+        top_k_class_0_features = [feature_names[i] for i in top_k_class_0_indices]
+        top_k_class_0_coefs = [coef[i] for i in top_k_class_0_indices]
 
-        print(f"Bottom {k} features for classification: {feature_names[bottom_k_indices]}")
-        return feature_names[bottom_k_indices]
+        # count all the top5 features in the reviews text to see if it makes sense
+        words_to_count = top_k_class_1_features + top_k_class_0_features
+        cofs = top_k_class_1_coefs + top_k_class_0_coefs
+
+        combined_counts = utils.get_count_of_words(dataset_name=dataset_name, words=words_to_count)
+        combined_counts['model_name'] = model_name
+        combined_counts['dataset_name'] = dataset_name
+        combined_counts['coefs'] = cofs
+        combined_counts['class'] = [1] * k + [0] * k
+        combined_counts['feature'] = combined_counts.index
+
+        combined_counts = combined_counts[['model_name','dataset_name','class', 'feature', 'deceptive_count','truthful_count','coefs']]
+        return combined_counts
 
 
-def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer, penalty='l1'):
+def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     """
     Runs the Logistic Regression model on the provided data and evaluates it.
     
     Parameters:
     -----------
     dataset_name : str
-        Name of the dataset (e.g., unigrams or bigrams).
-    X_train : array-like
-        Training data features.
-    y_train : array-like
-        Training data labels.
-    X_test : array-like
-        Test data features.
-    y_test : array-like
-        Test data labels.
-    vectorizer : CountVectorizer or TfidfVectorizer
-        Vectorizer used to create the feature matrix.
-    penalty : str, optional
-        Regularization type ('l1' or 'l2'). Default is 'l1'.
+        Name of the dataset (e.g., unigrams or bigrams or both).
+    X_train : array-like of shape (n_samples, n_features)
+        The training input samples.
+    y_train : array-like of shape (n_samples,)
+        The target values.
+    X_test : array-like of shape (n_samples, n_features)
+        The test input samples.
+    y_test : array-like of shape (n_samples,)
+        The target values of the test set.
+    vectorizer: CountVectorizer or TfidfVectorizer
+        The vectorizer used to transform the text data.
     
     Returns:
     --------
     df_evaluation : pd.DataFrame
-        DataFrame with evaluation scores.
+        A DataFrame with evaluation scores.
     y_pred : array-like
         Predicted class labels for the test set.
     """
-    print(f"Running Logistic Regression with {penalty} regularization.")
-    model = Logreg(penalty=penalty)
-    model.train(X_train, y_train, Cs=[0.01, 0.1, 1.0, 10], cv=5)
-    y_pred = model.predict(X_test)
+    # Prepare a list to collect evaluation results
+    evaluations = []
+    best_y_pred = None
+    max_accuracy = -1
 
-    # Evaluate model performance
-    df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
+    # loop over Regularization type ('l1' or 'l2')
+    for penalty in ['l1', 'l2']:
+        print(f"Running Logistic Regression with {penalty} regularization.")
+        model = Logreg(penalty=penalty)
+        model.train(X_train, y_train)
+        y_pred = model.predict(X_test)
 
-    # Get top and bottom features for analysis
-    df_top_5 = model.get_top_k_features(vectorizer, k=5)
-    df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
+        # Evaluate model performance
+        df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
 
-    new_row = {
-            'model_name': f'Logistic Regression with Lasso Penalty',
-            'dataset_name': dataset_name,
-            **df_scores,
-            'top_5_features': ", ".join(df_top_5),
-            'bottom_5_features': ", ".join(df_bottom_5)
-        }
+        model_name = f'Logistic Regression with {penalty} Penalty'
 
-    df_evaluation = pd.DataFrame([new_row])
-    return df_evaluation, y_pred
+        # Get top and bottom features for analysis
+        df_combined_counts = model.get_top_k_features(vectorizer, model_name, dataset_name, k=5)
+
+        write_mode = 'w' if dataset_name == 'unigrams' else 'a'
+        write_header = False if dataset_name == 'both' else True
+        df_combined_counts.to_csv("../Output/top_k_features.csv", mode=write_mode, header=write_header)
+
+        if df_scores['accuracy'] > max_accuracy:
+            max_accuracy = df_scores['accuracy']
+            best_y_pred = y_pred
+
+        new_row = {
+                'model_name': model_name,
+                'dataset_name': dataset_name,
+                **df_scores
+            }
+        # Append new_row to evaluations list
+        evaluations.append(new_row)
+
+        # Create DataFrame from the list of evaluations
+    df_evaluations = pd.DataFrame(evaluations)
+    return df_evaluations, best_y_pred

@@ -93,28 +93,6 @@ class RandomForestModel:
         y_pred = self.model.predict(X_post_feature_selec)
         return y_pred
 
-    def get_top_k_features(self, vectorizer, k=5):
-        """
-        Returns the top k features for each class.
-        """
-        feature_importances = self.model.feature_importances_
-        top_k_indices = np.argsort(feature_importances)[-k:]
-        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
-
-        print(f"Top {k} features by importance: {feature_names[top_k_indices]}")
-        return feature_names[top_k_indices]
-
-    def get_bottom_k_features(self, vectorizer, k=5):
-        """
-        Returns the bottom k features for each class.
-        """
-        feature_importances = self.model.feature_importances_
-        bottom_k_indices = np.argsort(feature_importances)[:k]
-        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
-
-        print(f"Bottom {k} features by importance: {feature_names[bottom_k_indices]}")
-        return feature_names[bottom_k_indices]
-
 def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     """
     Run the model with the given train and test sets.
@@ -122,15 +100,19 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     Parameters:
     -----------
     dataset_name : str
-        The name of the given dataset (unigrams or bigrams).
+        The name of the given dataset (unigrams or bigrams or both).
     X_train : array-like of shape (n_samples, n_features)
         The training input samples.
     y_train : array-like of shape (n_samples,)
         The target values.
+    vectorizer_train: CountVectorizer or TfidfVectorizer
+        The vectorizer used to transform the train text data.
     X_test : array-like of shape (n_samples, n_features)
         The test input samples.
     y_test : array-like of shape (n_samples,)
         The target values of the test set.
+    vectorizer: CountVectorizer or TfidfVectorizer
+        The vectorizer used to transform the text data.
 
     Returns:
     --------
@@ -140,6 +122,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     evaluations = []
     total_count_features = X_train.shape[1]
     number_feature_range = utils.get_feature_range(total_count_features)
+    best_y_pred = None
+    max_accuracy = -1
 
     for k in number_feature_range:
         print(f"Running with {k} features")
@@ -148,20 +132,19 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         y_pred = model.predict(X_test)
 
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
-        top_5_features = model.get_top_k_features(vectorizer, k=5)
-        bottom_5_features = model.get_bottom_k_features(vectorizer, k=5)
+        if df_scores['accuracy'] > max_accuracy:
+            max_accuracy = df_scores['accuracy']
+            best_y_pred = y_pred
 
         new_row = {
             'model_name': f'RandomForestModel (#{k} features)',
             'dataset_name': dataset_name,
-            **df_scores,
-            'top_5_features': ", ".join(top_5_features),
-            'bottom_5_features': ", ".join(bottom_5_features)
+            **df_scores
         }
         evaluations.append(new_row)
 
     df_evaluations = pd.DataFrame(evaluations)
-    return df_evaluations, y_pred
+    return df_evaluations, best_y_pred
 
 
 

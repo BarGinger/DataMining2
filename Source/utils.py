@@ -7,14 +7,16 @@ Date: September 12, 2024
 Description: Assignment 2 - Utilizes functions for the entire project
 """
 
+import pandas as pd
 import numpy as np
+from nltk import ngrams
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import mutual_info_classif
-from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
+from main import  FAKE, get_df
 
 
 def create_folds(X, y, n_folds=8):
@@ -127,56 +129,67 @@ def cross_validate_model(model, X, y, n_folds=8):
     return avg_scores
 
 
-def extract_features(df, use_bigrams=False):
+def extract_features(reviews, ngram_range=(1, 1)):
     """
-    Converts the preprocessed text data into a document-term matrix with unigrams or bigrams.
+    Converts the preprocessed text data into a document-term matrix with unigrams or bigrams or a combo of both.
 
     Parameters:
     ----------
-    df : pd.DataFrame
-        Preprocessed DataFrame containing the cleaned text data.
-    use_bigrams : bool
-        Boolean flag to indicate whether to use bigrams (default is False).
+    reviews : np.ndarray
+        reviews' cleaned text data.
+    ngram_range : range
+        range of grams to create default is unigrams (1, 1)
 
     Returns:
     -------
     tuple
         A tuple containing:
         - Feature matrix X
-        - Target vector y
         - Vectorizer for future analysis.
     """
     # we use stop_words = None because reviews were already preprocessed
-    vectorizer = CountVectorizer(ngram_range=(2, 2) if use_bigrams else (1, 1), stop_words=None)
-    X = vectorizer.fit_transform(df['review'])  # Use the preprocessed text column
-    # Convert 'is_fake' from FAKE Enum to integers
-    y = df['is_fake'].apply(lambda x: 1 if x.name == "DECEPTIVE" else 0)
+    # vectorizer = CountVectorizer(ngram_range=(2, 2) if use_bigrams else (1, 1), stop_words=None, min_df=5)
+    # X = vectorizer.fit_transform(df['review'])  # Use the preprocessed text column
 
-    return X, y, vectorizer
+    vectorizer = TfidfVectorizer(min_df=0.02, max_df=0.98, ngram_range=ngram_range)
+    X = vectorizer.fit_transform(reviews).toarray()
+
+    return X, vectorizer
 
 
-def split_into_train_test(X, y):
-    """
-    Splits the dataset into training and testing sets.
+def get_count_of_words(dataset_name, words):
+    # Define your top features (both unigrams and bigrams) for each class
+    df_reviews = get_df()
+    # Initialize CountVectorizer with target features as vocabulary
 
-    Parameters:
-    ----------
-    X : np.ndarray
-        Feature matrix.
-    y : np.ndarray
-        Labels.
+    if 'both' in dataset_name:
+        ngram_range = (1,2)
+    elif 'unigrams' in dataset_name:
+        ngram_range = (1, 1)
+    else:
+        ngram_range = (2, 2)
 
-    Returns:
-    -------
-    tuple
-        A tuple containing:
-        - X_train
-        - X_test
-        - y_train
-        - y_test
-    """
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    return X_train, X_test, y_train.to_numpy(), y_test.to_numpy()
+    vectorizer =  CountVectorizer(vocabulary=set(words), ngram_range=ngram_range)
+    X = vectorizer.fit_transform(df_reviews['review'])  # Fit and transform on the reviews
+    # Get the counts for each feature
+    feature_counts = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
+
+    # Separate counts by class (deceptive or truthful)
+    deceptive_counts = feature_counts[df_reviews['is_fake'] == FAKE.DECEPTIVE].sum(axis=0)
+    truthful_counts = feature_counts[df_reviews['is_fake'] == FAKE.TRUTHFUL].sum(axis=0)
+
+    # Combine into a single DataFrame for comparison
+    combined_counts = pd.DataFrame({
+        'deceptive_count': deceptive_counts,
+        'truthful_count': truthful_counts
+    }).fillna(0).astype(int)
+
+    # Reindex the DataFrame to match the order of the words list
+    combined_counts = combined_counts.reindex(index=words)
+
+    print("Word counts for top features:")
+    print(combined_counts)
+    return combined_counts
 
 
 def get_feature_range(total_features):
@@ -191,10 +204,6 @@ def get_feature_range(total_features):
     while current_value + step_size <= total_features and current_value < 5000:
         current_value += step_size
         feature_range.append(current_value)
-
-    # Ensure the last value is the total number of features
-    if feature_range[-1] != total_features:
-        feature_range.append(total_features)
 
     # Filter out any values that are higher than the total number of features
     feature_range = [value for value in feature_range if value <= total_features]
@@ -223,7 +232,7 @@ def get_top_features(X, y, k=100):
    """
 
     # Calculate mutual information scores
-    mi_scores = mutual_info_classif(X, y, discrete_features=True)
+    mi_scores = mutual_info_classif(X, y, discrete_features=False)
 
     # Get the indices of the top k features
     top_k_indices = np.argsort(mi_scores)[-k:]

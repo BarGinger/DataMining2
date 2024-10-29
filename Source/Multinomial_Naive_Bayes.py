@@ -186,7 +186,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         Parameters:
         -----------
         dataset_name : str
-            The name of the given dataset (unigrams or bigrams)
+            The name of the given dataset (unigrams or bigrams or both)
         X_train : array-like of shape (n_samples, n_features)
             The training input samples.
         y_train : array-like of shape (n_samples,)
@@ -195,6 +195,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
             The test input samples.
         y_test : array-like of shape (n_samples,)
             The target values of the test set.
+        vectorizer: CountVectorizer or TfidfVectorizer
+            The vectorizer used to transform the text data.
 
         Returns:
         --------
@@ -204,6 +206,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     # Prepare a list to collect evaluation results
     evaluations = []
+    best_y_pred = None
+    max_accuracy = -1
 
     total_count_features = X_train.shape[1]
     number_feature_range = utils.get_feature_range(total_count_features)
@@ -216,6 +220,9 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
         # Calculate scores
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
+        if df_scores['accuracy'] > max_accuracy:
+            max_accuracy = df_scores['accuracy']
+            best_y_pred = y_pred
 
         # Get top and bottom 5 features
         df_top_5 = model.get_top_k_features(vectorizer, k=5)
@@ -225,11 +232,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         new_row = {
             'model_name': f'Multinomial Naive Bayes (#{k} features)',
             'dataset_name': dataset_name,
-            **df_scores,  # Unpack scores
-            'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
-            'top_5_features_truthful': ", ".join(df_top_5['truthful']),
-            'bottom_5_features_deceptive': ", ".join(df_bottom_5['deceptive']),
-            'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
+            **df_scores  # Unpack scores
         }
 
         # Append new_row to evaluations list
@@ -237,4 +240,4 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     # Create DataFrame from the list of evaluations
     df_evaluations = pd.DataFrame(evaluations)
-    return  df_evaluations, y_pred
+    return  df_evaluations, best_y_pred

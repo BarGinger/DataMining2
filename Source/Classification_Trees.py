@@ -93,51 +93,6 @@ class DecisionTreeModel:
         X_post_feature_selec = X[:, self.selected_features_indices]
         y_pred = self.model.predict(X_post_feature_selec)
         return y_pred
-    
-
-    def get_top_k_features(self, vectorizer, k=5):
-        """
-        Returns the top k features for each class.
-        """
-        feature_log_probs = self.model.feature_importances_
-
-        # Calculate the difference in log-probabilities between classes
-        log_prob_diff = feature_log_probs[1] - feature_log_probs[0]
-
-        # Get the top k features that are most indicative of deceptive and truthful reviews
-        top_k_deceptive = np.argsort(log_prob_diff)[-k:]  # Deceptive class (positive diff)
-        top_k_truthful = np.argsort(-log_prob_diff)[-k:]  # Truthful class (negative diff)
-
-        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
-        print(f"Top {k} features for deceptive reviews: {feature_names[top_k_deceptive]}")
-        print(f"Top {k} features for truthful reviews: {feature_names[top_k_truthful]}")
-
-        return {
-            'deceptive': feature_names[top_k_deceptive],
-            'truthful': feature_names[top_k_truthful]
-        }
-
-    def get_bottom_k_features(self, vectorizer, k=5):
-        """
-        Returns the bottom k features for each class.
-        """
-        feature_log_probs = self.model.feature_importances_
-
-        # For deceptive: features with the smallest log-prob for class 1 (deceptive)
-        bottom_k_deceptive = np.argsort(feature_log_probs[1])[:k]
-
-        # For truthful: features with the smallest log-prob for class 0 (truthful)
-        bottom_k_truthful = np.argsort(feature_log_probs[0])[:k]
-
-        feature_names = np.array(vectorizer.get_feature_names_out())[self.selected_features_indices]
-        print(f"Bottom {k} features for deceptive reviews: {feature_names[bottom_k_deceptive]}")
-        print(f"Bottom {k} features for truthful reviews: {feature_names[bottom_k_truthful]}")
-
-        return {
-            'deceptive': feature_names[bottom_k_deceptive],
-            'truthful': feature_names[bottom_k_truthful]
-        }
-
 
 
 def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
@@ -147,7 +102,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     Parameters:
     -----------
     dataset_name : str
-        The name of the given dataset (unigrams or bigrams).
+        The name of the given dataset (unigrams or bigrams or both).
     X_train : array-like of shape (n_samples, n_features)
         The training input samples.
     y_train : array-like of shape (n_samples,)
@@ -156,6 +111,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         The test input samples.
     y_test : array-like of shape (n_samples,)
         The target values of the test set.
+    vectorizer: CountVectorizer or TfidfVectorizer
+        The vectorizer used to transform the text data.
 
     Returns:
     --------
@@ -167,30 +124,29 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     evaluations = []
     total_count_features = X_train.shape[1]
     number_feature_range = utils.get_feature_range(total_count_features)
+    best_y_pred = None
+    max_accuracy = -1
 
     for k in number_feature_range:
         print(f"Running with {k} features")
         model = DecisionTreeModel()
         model.train(X_train, y_train, max_depth=[3, 5, 7, 10], cv=5, k=k)
         y_pred = model.predict(X_test)
-
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
-        df_top_5 = model.get_top_k_features(vectorizer, k=5)
-        df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
+
+        if df_scores['accuracy'] > max_accuracy:
+            max_accuracy = df_scores['accuracy']
+            best_y_pred = y_pred
 
         new_row = {
             'model_name': f'DecisionTreeModel (#{k} features)',
             'dataset_name': dataset_name,
-            **df_scores,
-            'top_5_features_deceptive': ", ".join(df_top_5['deceptive']),
-            'top_5_features_truthful': ", ".join(df_top_5['truthful']),
-            'bottom_5_features_deceptive': ", ".join(df_bottom_5['deceptive']),
-            'bottom_5_features_truthful': ", ".join(df_bottom_5['truthful'])
+            **df_scores
         }
         evaluations.append(new_row)
 
     df_evaluations = pd.DataFrame(evaluations)
-    return df_evaluations, y_pred  # return both evaluation dataframe and predictions
+    return df_evaluations, best_y_pred  # return both evaluation dataframe and predictions of best model
 
 
 
