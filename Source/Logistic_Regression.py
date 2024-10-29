@@ -8,7 +8,7 @@ import utils
 class Logreg:
     """
     Logistic Regression model with Lasso (L1) or Ridge (L2) regularization for text classification.
-    
+
     Attributes:
     -----------
     model : LogisticRegression
@@ -106,9 +106,8 @@ class Logreg:
 
     def get_top_k_features(self, vectorizer, model_name, dataset_name, k=5):
         """
-        Returns the top k most influential features for each class in a binary classification model,
-        with feature names and coefficients as separate entries.
-
+        Returns the top k most influential features.
+        
         Parameters:
         -----------
         vectorizer : CountVectorizer or TfidfVectorizer
@@ -123,36 +122,38 @@ class Logreg:
 
         Returns:
         --------
-        top_features : Dataframe
-            a dataframe containing the top k feature names and their coefficients for each class with counts in each class.
+        top_k_features : array
+            Array containing the top k features.
         """
-        # Get model coefficients and feature names
-        coef = self.model.coef_[0]
+        feature_importance = np.abs(self.model.coef_[0])
+        top_k_indices = np.argsort(feature_importance)[-k:]
         feature_names = vectorizer.get_feature_names_out()
 
-        # Top k features pushing towards class 1 (most positive coefficients)
-        top_k_class_1_indices = np.argsort(coef)[-k:]
-        top_k_class_1_features = [feature_names[i] for i in top_k_class_1_indices[::-1]]
-        top_k_class_1_coefs = [coef[i] for i in top_k_class_1_indices[::-1]]
+        print(f"Top {k} features for classification: {feature_names[top_k_indices]}")
+        return feature_names[top_k_indices]
 
-        # Top k features pushing towards class 0 (most negative coefficients)
-        top_k_class_0_indices = np.argsort(coef)[:k]
-        top_k_class_0_features = [feature_names[i] for i in top_k_class_0_indices]
-        top_k_class_0_coefs = [coef[i] for i in top_k_class_0_indices]
+    def get_bottom_k_features(self, vectorizer, k=5):
+        """
+        Returns the least k influential features.
+        
+        Parameters:
+        -----------
+        vectorizer : CountVectorizer or TfidfVectorizer
+            The vectorizer used to transform the text data.
+        k : int, optional
+            Number of bottom features to return (default is 5).
+        
+        Returns:
+        --------
+        bottom_k_features : array
+            Array containing the bottom k features.
+        """
+        feature_importance = np.abs(self.model.coef_[0])
+        bottom_k_indices = np.argsort(feature_importance)[:k]
+        feature_names = vectorizer.get_feature_names_out()
 
-        # count all the top5 features in the reviews text to see if it makes sense
-        words_to_count = top_k_class_1_features + top_k_class_0_features
-        cofs = top_k_class_1_coefs + top_k_class_0_coefs
-
-        combined_counts = utils.get_count_of_words(dataset_name=dataset_name, words=words_to_count)
-        combined_counts['model_name'] = model_name
-        combined_counts['dataset_name'] = dataset_name
-        combined_counts['coefs'] = cofs
-        combined_counts['class'] = [1] * k + [0] * k
-        combined_counts['feature'] = combined_counts.index
-
-        combined_counts = combined_counts[['model_name','dataset_name','class', 'feature', 'deceptive_count','truthful_count','coefs']]
-        return combined_counts
+        print(f"Bottom {k} features for classification: {feature_names[bottom_k_indices]}")
+        return feature_names[bottom_k_indices]
 
 
 def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
@@ -196,26 +197,17 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         # Evaluate model performance
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
 
-        model_name = f'Logistic Regression with {penalty} Penalty'
+    # Get top and bottom features for analysis
+    df_top_5 = model.get_top_k_features(vectorizer, k=5)
+    df_bottom_5 = model.get_bottom_k_features(vectorizer, k=5)
 
-        # Get top and bottom features for analysis
-        df_combined_counts = model.get_top_k_features(vectorizer, model_name, dataset_name, k=5)
-
-        write_mode = 'w' if dataset_name == 'unigrams' else 'a'
-        write_header = False if dataset_name == 'both' else True
-        df_combined_counts.to_csv("../Output/top_k_features.csv", mode=write_mode, header=write_header)
-
-        if df_scores['accuracy'] > max_accuracy:
-            max_accuracy = df_scores['accuracy']
-            best_y_pred = y_pred
-
-        new_row = {
-                'model_name': model_name,
-                'dataset_name': dataset_name,
-                **df_scores
-            }
-        # Append new_row to evaluations list
-        evaluations.append(new_row)
+    new_row = {
+            'model_name': f'Logistic Regression with Lasso Penalty',
+            'dataset_name': dataset_name,
+            **df_scores,
+            'top_5_features': ", ".join(df_top_5),
+            'bottom_5_features': ", ".join(df_bottom_5)
+        }
 
         # Create DataFrame from the list of evaluations
     df_evaluations = pd.DataFrame(evaluations)
