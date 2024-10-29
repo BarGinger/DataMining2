@@ -215,6 +215,19 @@ def get_count_of_words(dataset_name, words):
 
 
 def get_feature_range(total_features):
+    """
+    Get the feature range for top k features in MNB
+
+    Parameters:
+    -----------
+    total_features : int
+        total number of features
+
+    Returns:
+    --------
+    the range of number of features to check
+    """
+
     initial_round_numbers = [10, 15, 25, 50, 100, 250, 500, 1000]
     step_size = 1000
 

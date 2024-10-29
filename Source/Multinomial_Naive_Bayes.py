@@ -215,7 +215,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     best_y_pred = None
     max_accuracy = -1
 
-    total_count_features = X_train.shape[1]
+    total_count_features = vectorizer.get_feature_names_out().size
     number_feature_range = utils.get_feature_range(total_count_features)
 
     for k in number_feature_range:

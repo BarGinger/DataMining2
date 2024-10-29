@@ -184,7 +184,7 @@ def plot_scores_as_lines(df_scores):
     g.set_axis_labels("Feature Count", "Score", fontsize=16)
     g.set_titles("{col_name}", size=18)
     g.add_legend(title="Metrics", title_fontsize=20, fontsize=15)
-    g.fig.suptitle("Model Performance Metrics by Feature Count and Dataset", fontsize=20, y=1.0002)
+    g.fig.suptitle("Evaluating Multinomial Naive Bayes: Performance Metrics Based on Feature Count and N-Gram Selection", fontsize=20, y=1.0002)
 
     legend = g.legend
     legend.set_title("Metrics")
@@ -196,7 +196,7 @@ def plot_scores_as_lines(df_scores):
 
 
     plt.subplots_adjust(top=0.8)
-    file_name = "../Output/Comparison of performance Metrics.png"
+    file_name = "../Output/Multinomial Naive Bayes performance Metrics.png"
     plt.savefig(file_name, dpi=450)
     plt.show()
 
@@ -207,5 +207,7 @@ if __name__ == "__main__":
 
     df_evaluations = pd.read_csv(EVALUATIONS_FILENAME)
     plot_scores_as_lines(df_evaluations)
+
+    print("Done with plots")
 
 

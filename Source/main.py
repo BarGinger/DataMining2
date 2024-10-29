@@ -234,7 +234,7 @@ def get_datasets():
     tuple
         A tuple containing the training and testing datasets (X_train, y_train, X_test, y_test).
     """
-    df = get_df()
+    df = utils.get_df()
     X, y = df['review'], df['is_fake'].apply(lambda x: 1 if x.name == "DECEPTIVE" else 0)
 
     X_unigrams, vectorizer_unigram = utils.extract_features(reviews=X, ngram_range= (1, 1))
