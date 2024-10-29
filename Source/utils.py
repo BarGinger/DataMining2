@@ -240,6 +240,10 @@ def get_feature_range(total_features):
         current_value += step_size
         feature_range.append(current_value)
 
+    # Ensure the last value is the total number of features
+    if feature_range[-1] != total_features:
+        feature_range.append(total_features)
+
     # Filter out any values that are higher than the total number of features
     feature_range = [value for value in feature_range if value <= total_features]
 
