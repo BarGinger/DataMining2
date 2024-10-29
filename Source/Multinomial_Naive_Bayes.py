@@ -39,18 +39,17 @@ class MultinomialNaiveBayesModel:
         Returns the least k features for each class (deceptive and truthful).
     """
 
-    def __init__(self):
+    def __init__(self, number_feature: int):
         """
         Constructs all the necessary attributes for the MultinomialNaiveBayesModel object.
 
         Parameters:
         -----------
-        method : str
-            The method used for feature selection. Default is 'l1'.
-        max_features : int
-            The maximum number of features to be selected. Default is 100.
+        number_feature : int
+            The maximum number of features to be selected.
         """
         self.model = None
+        self.number_feature = number_feature
         self.selected_features_indices = None
 
     def train(self, X_train, y_train, alphas=[0.1, 0.5, 1.0], cv=5, k=100):
@@ -90,6 +89,13 @@ class MultinomialNaiveBayesModel:
         # Save the best model after cross-validation
         self.model = grid.best_estimator_
         print(f"Best alpha: {self.model.alpha}")
+
+        return {
+            'cv': cv,
+            'scoring': 'accuracy',
+            'number_feature': self.number_feature,
+            'alpha': self.model.alpha
+        }
 
     def predict(self, X):
         """
@@ -214,8 +220,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
     for k in number_feature_range:
         print(f"Running with {k} features")
-        model = MultinomialNaiveBayesModel()
-        model.train(X_train, y_train, alphas=[0.1, 0.15, 0.25, 0.5, 0.75, 0.85, 1.0], cv=5, k=k)
+        model = MultinomialNaiveBayesModel(k)
+        params = model.train(X_train, y_train, alphas=[0.1, 0.15, 0.25, 0.5, 0.75, 0.85, 1.0], cv=5, k=k)
         y_pred = model.predict(X_test)
 
         # Calculate scores
@@ -232,7 +238,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         new_row = {
             'model_name': f'Multinomial Naive Bayes (#{k} features)',
             'dataset_name': dataset_name,
-            **df_scores  # Unpack scores
+            **df_scores,  # Unpack scores
+            'params': str(params)
         }
 
         # Append new_row to evaluations list

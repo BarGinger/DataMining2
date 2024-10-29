@@ -1,64 +1,7 @@
-model_name,dataset_name,accuracy,precision,recall,f1
-Multinomial Naive Bayes (#10 features),unigrams,0.60625,0.7297297297297297,0.3375,0.46153846153846156
-Multinomial Naive Bayes (#15 features),unigrams,0.5875,0.7058823529411765,0.3,0.42105263157894735
-Multinomial Naive Bayes (#25 features),unigrams,0.68125,0.7377049180327869,0.5625,0.6382978723404256
-Multinomial Naive Bayes (#50 features),unigrams,0.7125,0.717948717948718,0.7,0.7088607594936709
-Multinomial Naive Bayes (#100 features),unigrams,0.83125,0.8271604938271605,0.8375,0.8322981366459627
-Multinomial Naive Bayes (#250 features),unigrams,0.7625,0.7441860465116279,0.8,0.7710843373493976
-Multinomial Naive Bayes (#500 features),unigrams,0.84375,0.8395061728395061,0.85,0.84472049689441
-Multinomial Naive Bayes (#10 features),bigrams,0.58125,0.7241379310344828,0.2625,0.3853211009174312
-Multinomial Naive Bayes (#15 features),bigrams,0.5375,0.5882352941176471,0.25,0.3508771929824561
-Multinomial Naive Bayes (#25 features),bigrams,0.6125,0.7647058823529411,0.325,0.45614035087719296
-Multinomial Naive Bayes (#50 features),bigrams,0.6875,0.7586206896551724,0.55,0.6376811594202898
-Multinomial Naive Bayes (#100 features),bigrams,0.7125,0.7361111111111112,0.6625,0.6973684210526315
-Multinomial Naive Bayes (#10 features),both,0.5875,0.75,0.2625,0.3888888888888889
-Multinomial Naive Bayes (#15 features),both,0.63125,0.7058823529411765,0.45,0.549618320610687
-Multinomial Naive Bayes (#25 features),both,0.625,0.6612903225806451,0.5125,0.5774647887323944
-Multinomial Naive Bayes (#50 features),both,0.61875,0.6266666666666667,0.5875,0.6064516129032258
-Multinomial Naive Bayes (#100 features),both,0.7,0.7222222222222222,0.65,0.6842105263157895
-Multinomial Naive Bayes (#250 features),both,0.7875,0.8026315789473685,0.7625,0.782051282051282
-Multinomial Naive Bayes (#500 features),both,0.84375,0.8481012658227848,0.8375,0.8427672955974843
-Logistic Regression with l1 Penalty,unigrams,0.84375,0.8089887640449438,0.9,0.8520710059171598
-Logistic Regression with l2 Penalty,unigrams,0.875,0.875,0.875,0.875
-Logistic Regression with l1 Penalty,bigrams,0.6625,0.7321428571428571,0.5125,0.6029411764705882
-Logistic Regression with l2 Penalty,bigrams,0.6875,0.7205882352941176,0.6125,0.6621621621621622
-Logistic Regression with l1 Penalty,both,0.86875,0.8470588235294118,0.9,0.8727272727272727
-Logistic Regression with l2 Penalty,both,0.89375,0.8987341772151899,0.8875,0.8930817610062893
-DecisionTreeModel (#10 features),unigrams,0.5875,0.5573770491803278,0.85,0.6732673267326733
-DecisionTreeModel (#15 features),unigrams,0.60625,0.562962962962963,0.95,0.7069767441860465
-DecisionTreeModel (#25 features),unigrams,0.65,0.6153846153846154,0.8,0.6956521739130435
-DecisionTreeModel (#50 features),unigrams,0.61875,0.5798319327731093,0.8625,0.6934673366834171
-DecisionTreeModel (#100 features),unigrams,0.65,0.8,0.4,0.5333333333333333
-DecisionTreeModel (#250 features),unigrams,0.675,0.6272727272727273,0.8625,0.7263157894736842
-DecisionTreeModel (#500 features),unigrams,0.66875,0.7368421052631579,0.525,0.6131386861313869
-DecisionTreeModel (#10 features),bigrams,0.5,0.5,0.1125,0.1836734693877551
-DecisionTreeModel (#15 features),bigrams,0.5625,0.7272727272727273,0.2,0.3137254901960784
-DecisionTreeModel (#25 features),bigrams,0.5875,0.6944444444444444,0.3125,0.43103448275862066
-DecisionTreeModel (#50 features),bigrams,0.5875,0.75,0.2625,0.3888888888888889
-DecisionTreeModel (#100 features),bigrams,0.55625,0.6153846153846154,0.3,0.40336134453781514
-DecisionTreeModel (#10 features),both,0.55,0.5266666666666666,0.9875,0.6869565217391305
-DecisionTreeModel (#15 features),both,0.5875,0.5555555555555556,0.875,0.6796116504854369
-DecisionTreeModel (#25 features),both,0.6375,1.0,0.275,0.43137254901960786
-DecisionTreeModel (#50 features),both,0.65,0.8157894736842105,0.3875,0.5254237288135594
-DecisionTreeModel (#100 features),both,0.64375,0.6095238095238096,0.8,0.6918918918918919
-DecisionTreeModel (#250 features),both,0.60625,0.5779816513761468,0.7875,0.6666666666666666
-DecisionTreeModel (#500 features),both,0.63125,0.6129032258064516,0.7125,0.6589595375722543
-RandomForestModel (#10 features),unigrams,0.525,0.5370370370370371,0.3625,0.43283582089552236
-RandomForestModel (#15 features),unigrams,0.575,0.6764705882352942,0.2875,0.40350877192982454
-RandomForestModel (#25 features),unigrams,0.70625,0.6853932584269663,0.7625,0.7218934911242604
-RandomForestModel (#50 features),unigrams,0.71875,0.7215189873417721,0.7125,0.7169811320754716
-RandomForestModel (#100 features),unigrams,0.74375,0.7532467532467533,0.725,0.7388535031847133
-RandomForestModel (#250 features),unigrams,0.81875,0.8591549295774648,0.7625,0.8079470198675497
-RandomForestModel (#500 features),unigrams,0.84375,0.8666666666666667,0.8125,0.8387096774193549
-RandomForestModel (#10 features),bigrams,0.5,0.5,0.1375,0.21568627450980393
-RandomForestModel (#15 features),bigrams,0.625,0.7272727272727273,0.4,0.5161290322580645
-RandomForestModel (#25 features),bigrams,0.59375,0.6744186046511628,0.3625,0.4715447154471545
-RandomForestModel (#50 features),bigrams,0.65,0.6764705882352942,0.575,0.6216216216216216
-RandomForestModel (#100 features),bigrams,0.64375,0.7346938775510204,0.45,0.5581395348837209
-RandomForestModel (#10 features),both,0.54375,0.5945945945945946,0.275,0.37606837606837606
-RandomForestModel (#15 features),both,0.6875,0.8409090909090909,0.4625,0.5967741935483871
-RandomForestModel (#25 features),both,0.54375,0.574468085106383,0.3375,0.4251968503937008
-RandomForestModel (#50 features),both,0.66875,0.7213114754098361,0.55,0.624113475177305
-RandomForestModel (#100 features),both,0.76875,0.7721518987341772,0.7625,0.7672955974842768
-RandomForestModel (#250 features),both,0.8125,0.890625,0.7125,0.7916666666666666
-RandomForestModel (#500 features),both,0.76875,0.7866666666666666,0.7375,0.7612903225806451
+model_name,dataset_name,accuracy,precision,recall,f1,params
+Logistic Regression with l1 Penalty,unigrams,0.84375,0.8089887640449438,0.9,0.8520710059171598,"{'C': np.float64(10.0), 'cv': 5, 'penalty': 'l1', 'solver': 'liblinear', 'scoring': 'accuracy'}"
+Logistic Regression with l2 Penalty,unigrams,0.875,0.875,0.875,0.875,"{'C': np.float64(1.0), 'cv': 5, 'penalty': 'l2', 'solver': 'liblinear', 'scoring': 'accuracy'}"
+Logistic Regression with l1 Penalty,bigrams,0.6625,0.7321428571428571,0.5125,0.6029411764705882,"{'C': np.float64(1.0), 'cv': 5, 'penalty': 'l1', 'solver': 'liblinear', 'scoring': 'accuracy'}"
+Logistic Regression with l2 Penalty,bigrams,0.6875,0.7205882352941176,0.6125,0.6621621621621622,"{'C': np.float64(1.0), 'cv': 5, 'penalty': 'l2', 'solver': 'liblinear', 'scoring': 'accuracy'}"
+Logistic Regression with l1 Penalty,both,0.86875,0.8470588235294118,0.9,0.8727272727272727,"{'C': np.float64(10.0), 'cv': 5, 'penalty': 'l1', 'solver': 'liblinear', 'scoring': 'accuracy'}"
+Logistic Regression with l2 Penalty,both,0.89375,0.8987341772151899,0.8875,0.8930817610062893,"{'C': np.float64(1.0), 'cv': 5, 'penalty': 'l2', 'solver': 'liblinear', 'scoring': 'accuracy'}"

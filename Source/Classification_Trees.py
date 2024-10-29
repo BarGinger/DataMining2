@@ -72,6 +72,12 @@ class DecisionTreeModel:
         # Save the best model after cross-validation
         self.model = grid.best_estimator_
         print(f"Best max_depth: {self.model.max_depth}")
+
+        return {
+            'cv': cv,
+            'scoring': 'accuracy',
+            'max_depth': self.model.max_depth
+        }
         
     def predict(self, X):
         """
@@ -130,7 +136,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     for k in number_feature_range:
         print(f"Running with {k} features")
         model = DecisionTreeModel()
-        model.train(X_train, y_train, max_depth=[3, 5, 7, 10], cv=5, k=k)
+        params = model.train(X_train, y_train, max_depth=[3, 5, 7, 10], cv=5, k=k)
         y_pred = model.predict(X_test)
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
 
@@ -141,7 +147,8 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
         new_row = {
             'model_name': f'DecisionTreeModel (#{k} features)',
             'dataset_name': dataset_name,
-            **df_scores
+            **df_scores,
+            'params': str(params)
         }
         evaluations.append(new_row)
 

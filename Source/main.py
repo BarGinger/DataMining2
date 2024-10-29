@@ -448,6 +448,7 @@ def compare_all_models(datasets_dict, model_preds):
             chi2_stat, p_val = mcnemar_test(cm)
 
             # Interpret the result
+
             if p_val < alpha:
                 print(f"p-value = {p_val:.4f}, which is less than {alpha}.")
                 print(f"We reject the null hypothesis (H₀). {model1} and {model2} have significantly different accuracies.")
@@ -460,7 +461,9 @@ def compare_all_models(datasets_dict, model_preds):
                 'model1': model1,
                 'model2': model2,
                 'chi2': chi2_stat,
-                'p_value': p_val
+                'p_value': p_val,
+                'alpha': alpha,
+                'reject': p_val < alpha
             })
 
     # Convert results to a DataFrame
