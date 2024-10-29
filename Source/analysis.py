@@ -255,6 +255,19 @@ def plot_bnm_scores_as_lines(df_scores):
 
 if __name__ == "__main__":
     df_evaluations = pd.read_csv(EVALUATIONS_FILENAME)
+    # Step 1: Remove the closing parenthesis ')' from 'model_name'
+    df_evaluations['model_name'] = df_evaluations['model_name'].str.replace(')', '', regex=False)
+
+    # Step 2: Split 'model_name' into 'model_name' and 'settings' based on '('
+    df_evaluations[['model_name', 'settings']] = df_evaluations['model_name'].str.split('(', expand=True)
+
+    # Step 3: Strip whitespace from both 'model_name' and 'settings' columns
+    df_evaluations['model_name'] = df_evaluations['model_name'].str.strip()
+    df_evaluations['settings'] = df_evaluations['settings'].str.strip()
+
+    # Group by 'model_name' and 'dataset_name', then find the row index with the maximum accuracy for each group
+    max_accuracy_rows = df_evaluations.loc[df_evaluations.groupby(['model_name', 'dataset_name'])['accuracy'].idxmax()]
+
 
     # # create word cloud from entire dataset and from top features in LR
     # plot_word_clouds()

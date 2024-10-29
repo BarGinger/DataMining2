@@ -145,7 +145,7 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
             best_y_pred = y_pred
 
         new_row = {
-            'model_name': f'DecisionTreeModel (#{k} features)',
+            'model_name': f'Classification tree, (#{k} features)',
             'dataset_name': dataset_name,
             **df_scores,
             'params': str(params)
