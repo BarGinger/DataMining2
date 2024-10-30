@@ -15,7 +15,7 @@ from scipy.optimize import differential_evolution
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from wordcloud import WordCloud
-from utils import get_df, FAKE, EVALUATIONS_FILENAME
+from utils import get_df, FAKE, EVALUATIONS_FILENAME, STATISTICAL_ANALYSIS_FILENAME
 
 
 def create_word_cloud(words: str, filename: str, title: str, colored_word=None, color=None):
@@ -207,7 +207,7 @@ def plot_scores_as_bars(df_scores):
     # Adjust layout to ensure labels, titles, and legends fit well
     plt.tight_layout(rect=[0, 0, 0.9, 0.95])  # Adjusting layout to leave space for the legend
     file_name = "../Output/Performance Metrics of Top-Accuracy Models.png"
-    plt.savefig(file_name, dpi=400)
+    plt.savefig(file_name)
     plt.show()
 
 
@@ -269,6 +269,12 @@ def plot_bnm_scores_as_lines(df_scores):
     plt.savefig(file_name, dpi=800)
     plt.show()
 
+# Define a filtering function
+def filter_rows(row):
+    # Check if either (model1, model1_dataset_name) or (model2, model2_dataset_name) exists in df1's pairs
+    return ((row['model1'], row['model1_dataset_name']) in model_dataset_pairs) or \
+           ((row['model2'], row['model2_dataset_name']) in model_dataset_pairs)
+
 
 
 if __name__ == "__main__":
@@ -285,8 +291,24 @@ if __name__ == "__main__":
 
     # Group by 'model_name' and 'dataset_name', then find the row index with the maximum accuracy for each group
     max_accuracy_rows = df_evaluations.loc[df_evaluations.groupby(['model_name', 'dataset_name'])['accuracy'].idxmax()]
-    plot_scores_as_bars(max_accuracy_rows)
+    # plot_scores_as_bars(max_accuracy_rows)
 
+    model_dataset_pairs = set(zip(max_accuracy_rows['model_name'], max_accuracy_rows['dataset_name']))
+
+    # create statistical analysis
+    df_statistical = pd.read_csv(STATISTICAL_ANALYSIS_FILENAME)
+
+    for col in ['model1', 'model2']:
+        new_col_name = f'{col}_dataset_name'
+
+        # Step 1: Split 'model_name' into 'dataset_name' based on '_'
+        df_statistical[[col, new_col_name]] = df_statistical[col].str.split('_', expand=True)
+
+        # Step 3: Strip whitespace from both 'model_name' and 'dataset_name' columns
+        df_statistical[col] = df_statistical[col].str.strip()
+        df_statistical[new_col_name] = df_statistical[new_col_name].str.strip()
+
+    df_statistical_flt = df_statistical[df_statistical.apply(filter_rows, axis=1)]
 
     # # create word cloud from entire dataset and from top features in LR
     # plot_word_clouds()

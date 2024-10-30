@@ -292,7 +292,7 @@ def  run_all_models():
             "model_run_method": LR.run_the_model
         },
         {
-            "model_name": "Classification Trees",
+            "model_name": "Classification Tree",
             "model_run_method": CLT.run_the_model
         },
         {
