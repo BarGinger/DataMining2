@@ -141,59 +141,77 @@ def plot_confusion_matrix(y_true, y_pred, title):
                 annot_kws={"size": 14, "fontweight": "bold"})  # Adjust font properties
     plt.title(title, fontsize=16, fontweight='bold')  # Make title bold and larger
     file_name = f"Output/{title}_confusion_matrix.png"
-    plt.savefig(file_name, dpi=450)
+    plt.savefig(file_name, dpi=800)
     plt.show()
+
 
 def plot_scores_as_bars(df_scores):
     """
-    Plot word cloud on given dataframe
+    Plot bar plot of model scores by metric for each model and dataset combination.
 
     Parameters:
     -----------
-    ddf_scores : dataframe of scores
+    df_scores : DataFrame
+        DataFrame of scores with columns 'model_name', 'dataset_name', and metrics as separate columns.
 
     Returns:
     --------
     None
     """
     # Melt the DataFrame to long format
-    df_melted = df_scores.melt(id_vars='model_name', var_name='Metric', value_name='Value')
+    df = df_scores.copy()
+    df = df.drop(columns=['params', 'settings'], errors='ignore')  # Drop columns if they exist
+    df_melted = df.melt(id_vars=['model_name', 'dataset_name'], var_name='metric', value_name='value')
 
-    df_melted.to_csv("Output/df_melted.csv", sep='\t', encoding='utf-8')
+    # Optional: Save the melted DataFrame to CSV
+    df_melted.to_csv("../Output/df_top_models_melted.csv", index=False)
 
-    # Create the bar plot
-    plt.figure(figsize=(20, 16))
-    ax = sns.barplot(x='Metric', y='Value', hue='Model', data=df_melted)
+    # Set up the FacetGrid for model_name and dataset_name with a larger figure size
+    g = sns.FacetGrid(df_melted, row="dataset_name", margin_titles=False, height=6, aspect=2)
 
-    # Add value labels on the bars
-    for p in ax.patches:
-        ax.annotate(format(p.get_height(), '.2f'),
-                    (p.get_x() + p.get_width() / 2., p.get_height()),
-                    ha='center',
-                    va='center',
-                    xytext=(0, 9),
-                    textcoords='offset points'
-                    )
+    # Map a barplot onto each facet
+    g.map_dataframe(sns.barplot, x="metric", y="value", hue="model_name", palette='hls', dodge=True)
 
-    plt.title(label='Comparison of performance metrics across the different models',
-              fontsize=34,
-              fontweight='bold',
-              color='brown',
-              pad=20)
+    g.set_titles("{row_name}", size=28, fontweight='bold')
 
-    plt.ylabel("Score", fontsize=30, fontweight='bold', color='black', labelpad=20)
-    plt.xlabel("Metrics", fontsize=30, fontweight='bold', color='black', labelpad=20)
+    # Add value labels above each bar
+    for ax in g.axes.flatten():
+        for container in ax.containers:
+            ax.bar_label(container, fmt='%.2f', label_type='edge', fontsize=18)
 
-    # Increase size of axis ticks and values
-    plt.xticks(fontsize=16, color='navy', fontweight='bold', rotation=45)
-    plt.yticks(fontsize=16, color='navy', fontweight='bold')
-    plt.ylim(0, 1)
-    plt.legend(title='Model')
+    # Explicitly set x-axis labels (metrics) and rotate them for better readability
+    for ax in g.axes.flat:
+        for label in ax.get_xticklabels():
+            label.set_rotation(45)
+            label.set_horizontalalignment('right')
+            label.set_fontsize(22)
+        ax.set_xlabel("Metric", fontsize=26)  # x-axis title for each subplot
+        ax.set_ylabel("Value", fontsize=26)   # y-axis title for each subplot
 
-    plt.subplots_adjust(top=0.85)
-    file_name = "Output/Comparison of performance Metrics.png"
-    plt.savefig(file_name, dpi=450)
+    g.set_yticklabels(fontsize=20)
+    # Add a legend with a border, shadow, and positioned on the right center
+    g.add_legend(title="Models", loc="upper right", frameon=True, shadow=True)
+    legend = g.legend
+    legend.get_frame().set_edgecolor("black")  # Add border to legend
+    legend.get_title().set_fontsize(24)  # Legend title font size
+    legend.get_title().set_fontweight('bold')  # Legend title font size
+    for text in legend.get_texts():
+        text.set_fontsize(20)  # Legend label font size
+
+    # Set a main title with adjusted position
+    g.fig.suptitle("Performance Metrics of Top-Accuracy Models\nby N-Gram Selection",
+                   color='navy',
+                   fontweight='bold',
+                   fontsize=28, y=0.99, x=0.35)
+
+    # Adjust layout to ensure labels, titles, and legends fit well
+    plt.tight_layout(rect=[0, 0, 0.9, 0.95])  # Adjusting layout to leave space for the legend
+    file_name = "../Output/Performance Metrics of Top-Accuracy Models.png"
+    plt.savefig(file_name, dpi=400)
     plt.show()
+
+
+
 
 
 def plot_bnm_scores_as_lines(df_scores):
@@ -267,6 +285,7 @@ if __name__ == "__main__":
 
     # Group by 'model_name' and 'dataset_name', then find the row index with the maximum accuracy for each group
     max_accuracy_rows = df_evaluations.loc[df_evaluations.groupby(['model_name', 'dataset_name'])['accuracy'].idxmax()]
+    plot_scores_as_bars(max_accuracy_rows)
 
 
     # # create word cloud from entire dataset and from top features in LR
