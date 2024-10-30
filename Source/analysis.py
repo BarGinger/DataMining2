@@ -315,6 +315,8 @@ if __name__ == "__main__":
     # # create plot for comparing different n-grams, and # of features in Multinomial Naive Bayes
     # plot_bnm_scores_as_lines(df_evaluations)
 
+    # I think we should do heatmap
+
     print("Done with plots")
 
 
