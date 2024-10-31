@@ -11,11 +11,15 @@ from fileinput import filename
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from nltk.corpus import framenet
 from scipy.optimize import differential_evolution
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from wordcloud import WordCloud
 from utils import get_df, FAKE, EVALUATIONS_FILENAME, STATISTICAL_ANALYSIS_FILENAME
+from cmath import isnan
+from matplotlib.colors import LinearSegmentedColormap
+
 
 
 def create_word_cloud(words: str, filename: str, title: str, colored_word=None, color=None):
@@ -237,36 +241,44 @@ def plot_bnm_scores_as_lines(df_scores):
     # Melt the DataFrame to long format
     df_melted = df_mnb.melt(id_vars=['feature_count', 'dataset_name'], var_name='metric', value_name='value')
 
-    # df_melted.to_csv("Output/df_melted.csv", sep='\t', encoding='utf-8')
+    # Get the rows with max values for each (dataset_name, metric) pair
+    max_rows = df_melted.loc[df_melted.groupby(['dataset_name', 'metric'])['value'].idxmax()]
+
+    # Get the rows with min values for each (dataset_name, metric) pair
+    min_rows = df_melted.loc[df_melted.groupby(['dataset_name', 'metric'])['value'].idxmin()]
 
     # Create the line plot
-    plt.figure(figsize=(4.54,4.54), dpi=800)
+    plt.figure(figsize=(16, 14))
     # Create a FacetGrid for the plot
-    g = sns.FacetGrid(df_melted, col='dataset_name', hue='metric', sharex=False, sharey=False, height=5, aspect=1.5)
+    g = sns.FacetGrid(df_melted, row='dataset_name', hue='metric', sharex=False, sharey=False,
+                      # margin_titles=True,
+                      height=7, aspect=2, legend_out=True)
     g.map(sns.lineplot, 'feature_count', 'value')
 
     # Add titles and labels
-    g.set_axis_labels("Feature Count", "Score", fontsize=17.5)
-    g.set_titles("{col_name}", size=25)
-    g.add_legend(title="Metrics", title_fontsize=28, fontsize=20)
-    g.fig.suptitle("Evaluating Multinomial Naive Bayes: Performance Metrics Based on Feature Count and N-Gram Selection",
-                   fontsize=26,
-                   y=1.0002,
+    g.set_axis_labels("Feature Count", "Score", fontsize=28)
+    g.set_titles("{row_name}", size=25, fontweight='bold')
+    g.add_legend(title="Metrics", title_fontsize=28, fontsize=20, loc="center right", frameon=True, shadow=True)
+    g.fig.suptitle("Evaluating Multinomial Naive Bayes: \nPerformance Metrics Based on Feature Count and N-Gram Selection",
+                   fontsize=25,
+                   y=1.000001,
+                   x=0.5,
                    color='navy',
                    fontweight='bold')
 
     legend = g.legend
     legend.set_title("Metrics")
-    legend.get_title().set_fontsize(25)  # Legend title font size
+    legend.get_title().set_fontsize(26)  # Legend title font size
+    legend.get_title().set_fontweight('bold')  # Legend title font size
     for text in legend.get_texts():
-        text.set_fontsize(22)  # Legend label font size
-    g.set_xticklabels(fontsize=14)
-    g.set_yticklabels(fontsize=16)
+        text.set_fontsize(24)  # Legend label font size
+    g.set_xticklabels(fontsize=19.5)
+    g.set_yticklabels(fontsize=19.5)
 
 
-    plt.subplots_adjust(top=0.8)
+    plt.subplots_adjust(top=0.92, left=0.1, bottom=0.04, right=0.8, hspace=0.22)
     file_name = "../Output/Multinomial Naive Bayes performance Metrics.png"
-    plt.savefig(file_name, dpi=800)
+    plt.savefig(file_name)
     plt.show()
 
 # Define a filtering function
@@ -276,9 +288,98 @@ def filter_rows(row):
            ((row['model2'], row['model2_dataset_name']) in model_dataset_pairs)
 
 
+def plot_heatmap():
+    """
+    Create heatmap of statistical analysis
+    """
+    df_statistical = pd.read_csv(STATISTICAL_ANALYSIS_FILENAME)
+    # Duplicate each row with swapped model pairs
+    df_swapped = df_statistical[['model2', 'model1', 'p_value']].rename(
+        columns={'model2': 'model1', 'model1': 'model2'})
+    df_symmetric = pd.concat([df_statistical, df_swapped])
+
+    # Define color map and value range for better contrast
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    vmin = df_statistical['p_value'].min()
+    vmax = df_statistical['p_value'].max()
+
+    for col in ['model1', 'model2']:
+        new_col_name = f'{col}_dataset_name'
+
+        # Step 1: Split 'model_name' into 'dataset_name' based on '_'
+        df_symmetric[[col, new_col_name]] = df_symmetric[col].str.split('_', expand=True)
+
+        # Step 3: Strip whitespace from both 'model_name' and 'dataset_name' columns
+        df_symmetric[col] = df_symmetric[col].str.strip()
+        df_symmetric[new_col_name] = df_symmetric[new_col_name].str.strip()
+
+    # Create unique identifiers for model-dataset pairs
+    df_symmetric['pair1'] = df_symmetric['model1'] + ' (' + df_symmetric['model1_dataset_name'] + ')'
+    df_symmetric['pair2'] = df_symmetric['model2'] + ' (' + df_symmetric['model2_dataset_name'] + ')'
+    # Sort the data to group by dataset type (e.g., unigrams, bigrams, both)
+    df = df_symmetric.sort_values(by=['model1_dataset_name', 'model2_dataset_name'])
+
+
+    # Pivot to create a symmetric matrix
+    matrix_df = df.pivot(index="pair1", columns="pair2", values="p_value")
+
+    # Set up the plot
+    plt.figure(figsize=(14, 12))  # Adjust figure size if necessary
+
+    # Custom formatting function
+    def format_p_value(val):
+        # Ensure the value is treated as a float
+        try:
+            if isnan(val):
+                return val
+            val_float = float(val)
+        except ValueError:
+            return val  # Return original value if it can't be converted to float
+
+        if val_float < 0.001:
+            return float(f"{val_float:.2e}")  # Scientific notation for small values
+        else:
+            return float(f"{val_float:.3f}")  # Standard notation for larger values
+
+    # Apply the custom formatting function to create a new DataFrame for annotations
+    annot_matrix = matrix_df.map(format_p_value)
+
+    # Set up the plot
+    plt.figure(figsize=(14, 12))  # Adjust figure size if necessary
+    colors = ["lightgreen", "green", "pink", "red"]
+    cmap = LinearSegmentedColormap.from_list("custom_gradient", colors, N=5555)
+
+    # Create heatmap with adjustments
+    ax = sns.heatmap(
+        matrix_df,
+        annot=annot_matrix,  # Use the formatted annotations
+        cmap='mako',  # Using a diverging color map
+        center=0.05,  # Center the color map around 0.025 to highlight p < 0.05
+        linewidths=0.5,
+        linecolor='gray',
+        annot_kws={"size": 10},
+    )
+
+    # Customize title and labels
+    plt.title("P-value Matrix for Model & N-Grams Comparisons", x=0.25, fontsize=28, fontweight='bold')
+    plt.xlabel("Model - N-Grams Pair 2", fontsize=25, labelpad=20)
+    plt.ylabel("Model - N-Grams Pair 1", fontsize=25, labelpad=20)
+
+    # Customize tick labels
+    plt.xticks(fontsize=16, rotation=45, ha='right')
+    plt.yticks(fontsize=16, rotation=0)
+
+    # Adjust layout for clarity
+    plt.tight_layout()
+    file_name = "../Output/Heatmap pvalue.png"
+    plt.savefig(file_name)
+    plt.show()
+
+
 
 if __name__ == "__main__":
     df_evaluations = pd.read_csv(EVALUATIONS_FILENAME)
+    plot_bnm_scores_as_lines(df_evaluations)
     # Step 1: Remove the closing parenthesis ')' from 'model_name'
     df_evaluations['model_name'] = df_evaluations['model_name'].str.replace(')', '', regex=False)
 
@@ -296,24 +397,14 @@ if __name__ == "__main__":
     model_dataset_pairs = set(zip(max_accuracy_rows['model_name'], max_accuracy_rows['dataset_name']))
 
     # create statistical analysis
-    df_statistical = pd.read_csv(STATISTICAL_ANALYSIS_FILENAME)
+    # plot_heatmap()
 
-    for col in ['model1', 'model2']:
-        new_col_name = f'{col}_dataset_name'
-
-        # Step 1: Split 'model_name' into 'dataset_name' based on '_'
-        df_statistical[[col, new_col_name]] = df_statistical[col].str.split('_', expand=True)
-
-        # Step 3: Strip whitespace from both 'model_name' and 'dataset_name' columns
-        df_statistical[col] = df_statistical[col].str.strip()
-        df_statistical[new_col_name] = df_statistical[new_col_name].str.strip()
-
-    df_statistical_flt = df_statistical[df_statistical.apply(filter_rows, axis=1)]
+    # df_statistical_flt = df_statistical[df_statistical.apply(filter_rows, axis=1)]
 
     # # create word cloud from entire dataset and from top features in LR
     # plot_word_clouds()
     # # create plot for comparing different n-grams, and # of features in Multinomial Naive Bayes
-    # plot_bnm_scores_as_lines(df_evaluations)
+
 
     # I think we should do heatmap x-axis if model, y-axis is dataset (unigram / bigrams / both)  and value if p-value
 
