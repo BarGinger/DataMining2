@@ -1,49 +1,49 @@
 model_name,dataset_name,metric,value
-Classification tree,bigrams,accuracy,0.60625
-Classification tree,both,accuracy,0.73125
-Classification tree,unigrams,accuracy,0.69375
+Classification Tree,bigrams,accuracy,0.55
+Classification Tree,both,accuracy,0.69375
+Classification Tree,unigrams,accuracy,0.61875
 Logistic Regression,bigrams,accuracy,0.79375
 Logistic Regression,both,accuracy,0.88125
 Logistic Regression,unigrams,accuracy,0.85
 Multinomial Naive Bayes,bigrams,accuracy,0.825
-Multinomial Naive Bayes,both,accuracy,0.84375
-Multinomial Naive Bayes,unigrams,accuracy,0.84375
-Random forests,bigrams,accuracy,0.71875
-Random forests,both,accuracy,0.8125
-Random forests,unigrams,accuracy,0.85625
-Classification tree,bigrams,precision,0.707317073
-Classification tree,both,precision,0.793650794
-Classification tree,unigrams,precision,0.771929825
-Logistic Regression,bigrams,precision,0.770114943
-Logistic Regression,both,precision,0.87654321
-Logistic Regression,unigrams,precision,0.833333333
-Multinomial Naive Bayes,bigrams,precision,0.80952381
-Multinomial Naive Bayes,both,precision,0.795698925
-Multinomial Naive Bayes,unigrams,precision,0.789473684
-Random forests,bigrams,precision,0.796610169
-Random forests,both,precision,0.837837838
-Random forests,unigrams,precision,0.88
-Classification tree,bigrams,recall,0.3625
-Classification tree,both,recall,0.625
-Classification tree,unigrams,recall,0.55
+Multinomial Naive Bayes,both,accuracy,0.85
+Multinomial Naive Bayes,unigrams,accuracy,0.83125
+Random Forests,bigrams,accuracy,0.70625
+Random Forests,both,accuracy,0.8125
+Random Forests,unigrams,accuracy,0.85625
+Classification Tree,bigrams,precision,0.6052631578947368
+Classification Tree,both,precision,0.6666666666666666
+Classification Tree,unigrams,precision,0.6862745098039216
+Logistic Regression,bigrams,precision,0.7701149425287356
+Logistic Regression,both,precision,0.8765432098765432
+Logistic Regression,unigrams,precision,0.8333333333333334
+Multinomial Naive Bayes,bigrams,precision,0.8095238095238095
+Multinomial Naive Bayes,both,precision,0.8414634146341463
+Multinomial Naive Bayes,unigrams,precision,0.8045977011494253
+Random Forests,bigrams,precision,0.7391304347826086
+Random Forests,both,precision,0.8205128205128205
+Random Forests,unigrams,precision,0.88
+Classification Tree,bigrams,recall,0.2875
+Classification Tree,both,recall,0.775
+Classification Tree,unigrams,recall,0.4375
 Logistic Regression,bigrams,recall,0.8375
 Logistic Regression,both,recall,0.8875
 Logistic Regression,unigrams,recall,0.875
 Multinomial Naive Bayes,bigrams,recall,0.85
-Multinomial Naive Bayes,both,recall,0.925
-Multinomial Naive Bayes,unigrams,recall,0.9375
-Random forests,bigrams,recall,0.5875
-Random forests,both,recall,0.775
-Random forests,unigrams,recall,0.825
-Classification tree,bigrams,f1,0.479338843
-Classification tree,both,f1,0.699300699
-Classification tree,unigrams,f1,0.642335766
-Logistic Regression,bigrams,f1,0.80239521
-Logistic Regression,both,f1,0.881987578
-Logistic Regression,unigrams,f1,0.853658537
-Multinomial Naive Bayes,bigrams,f1,0.829268293
-Multinomial Naive Bayes,both,f1,0.855491329
-Multinomial Naive Bayes,unigrams,f1,0.857142857
-Random forests,bigrams,f1,0.676258993
-Random forests,both,f1,0.805194805
-Random forests,unigrams,f1,0.851612903
+Multinomial Naive Bayes,both,recall,0.8625
+Multinomial Naive Bayes,unigrams,recall,0.875
+Random Forests,bigrams,recall,0.6375
+Random Forests,both,recall,0.8
+Random Forests,unigrams,recall,0.825
+Classification Tree,bigrams,f1,0.3898305084745763
+Classification Tree,both,f1,0.7167630057803468
+Classification Tree,unigrams,f1,0.5343511450381679
+Logistic Regression,bigrams,f1,0.8023952095808383
+Logistic Regression,both,f1,0.8819875776397516
+Logistic Regression,unigrams,f1,0.8536585365853658
+Multinomial Naive Bayes,bigrams,f1,0.8292682926829268
+Multinomial Naive Bayes,both,f1,0.8518518518518519
+Multinomial Naive Bayes,unigrams,f1,0.8383233532934131
+Random Forests,bigrams,f1,0.6845637583892618
+Random Forests,both,f1,0.810126582278481
+Random Forests,unigrams,f1,0.8516129032258064

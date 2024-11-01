@@ -68,7 +68,8 @@ class MultinomialNaiveBayesModel:
             The number of cross-validation folds. Default is 5.
         k : int, optional
             The number of features to use. Default is 100.
-
+        write_mode: str
+            If to recreate/create the logs files or append to it
         Returns:
         --------
         None
@@ -90,12 +91,15 @@ class MultinomialNaiveBayesModel:
         self.model = grid.best_estimator_
         print(f"Best alpha: {self.model.alpha}")
 
+        # Save cv_results_ to a CSV file
+        results_df = pd.DataFrame(grid.cv_results_)
+
         return {
             'cv': cv,
             'scoring': 'accuracy',
             'number_feature': self.number_feature,
             'alpha': self.model.alpha
-        }
+        }, results_df
 
     def predict(self, X):
         """
@@ -218,13 +222,19 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     total_count_features = vectorizer.get_feature_names_out().size
     number_feature_range = utils.get_feature_range(total_count_features)
 
-    for k in number_feature_range:
+    for i, k in enumerate(number_feature_range):
         print(f"Running with {k} features")
         model = MultinomialNaiveBayesModel(k)
-        params = model.train(X_train, y_train, alphas=[0.1, 0.15, 0.25, 0.5, 0.75, 0.85, 1.0], cv=5, k=k)
-        y_pred = model.predict(X_test)
-
+        params, logs = model.train(X_train, y_train, alphas=[0.1, 0.15, 0.25, 0.5, 0.75, 0.85, 1.0], cv=5, k=k)
+        # save the training logs
+        logs['dataset_name'] = dataset_name
+        logs['features_count'] = k
+        write_mode = 'w' if (i == 0 and dataset_name == 'unigrams') else 'a'
+        write_header = write_mode == 'w'
+        logs.to_csv("../Output/mnb_grid_search_results.csv", index=False, mode=write_mode,
+                    header=write_header)
         # Calculate scores
+        y_pred = model.predict(X_test)
         df_scores = utils.calculate_scores(y_true=y_test, y_pred=y_pred)
         if df_scores['accuracy'] > max_accuracy:
             max_accuracy = df_scores['accuracy']

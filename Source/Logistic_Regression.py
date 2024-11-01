@@ -86,6 +86,13 @@ class Logreg:
         zero_weights_count = total_count - non_zero_weights_count
 
         print(f"out of {total_count} there are {zero_weights_count} zero weights and {non_zero_weights_count} nonzero weights")
+        # Save cross-validation results to a CSV file
+        logs = pd.DataFrame({
+            'C': [self.model.C_],
+            'mean_test_score': [self.model.scores_[1].mean(axis=0)],  # Average scores across folds
+            'std_test_score': [self.model.scores_[1].std(axis=0)]  # Standard deviation of scores
+        })
+
 
         return {
             'C':self.model.C_[0],
@@ -93,7 +100,7 @@ class Logreg:
             'penalty': self.penalty,
             'solver': 'liblinear',
             'scoring': 'accuracy'
-        }
+        }, logs
 
     def predict(self, X):
         """
@@ -205,7 +212,17 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
     for penalty in ['l1', 'l2']:
         print(f"Running Logistic Regression (with {penalty} regularization)")
         model = Logreg(penalty=penalty)
-        params = model.train(X_train, y_train)
+        params, logs = model.train(X_train, y_train)
+
+        write_mode = 'w' if (dataset_name == 'unigrams' and penalty == 'l1') else 'a'
+        write_header = write_mode == 'w'
+
+        # save training logs
+        logs['dataset_name'] = dataset_name
+        logs['penalty'] = penalty
+        logs.to_csv("../Output/lt_grid_search_results.csv", index=False, mode=write_mode,
+                    header=write_header)
+
         y_pred = model.predict(X_test)
 
         # Evaluate model performance
@@ -215,9 +232,6 @@ def run_the_model(dataset_name, X_train, y_train, X_test, y_test, vectorizer):
 
         # Get top and bottom features for analysis
         df_combined_counts = model.get_top_k_features(vectorizer, model_name, dataset_name, k=5)
-
-        write_mode = 'w' if dataset_name == 'unigrams' else 'a'
-        write_header = dataset_name == 'unigrams'
         df_combined_counts.to_csv("../Output/top_k_features.csv", mode=write_mode, header=write_header)
 
         if df_scores['accuracy'] > max_accuracy:

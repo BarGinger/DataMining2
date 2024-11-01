@@ -392,17 +392,17 @@ if __name__ == "__main__":
 
     # Group by 'model_name' and 'dataset_name', then find the row index with the maximum accuracy for each group
     max_accuracy_rows = df_evaluations.loc[df_evaluations.groupby(['model_name', 'dataset_name'])['accuracy'].idxmax()]
-    # plot_scores_as_bars(max_accuracy_rows)
+    plot_scores_as_bars(max_accuracy_rows)
 
     model_dataset_pairs = set(zip(max_accuracy_rows['model_name'], max_accuracy_rows['dataset_name']))
 
     # create statistical analysis
-    # plot_heatmap()
+    plot_heatmap()
 
     # df_statistical_flt = df_statistical[df_statistical.apply(filter_rows, axis=1)]
 
     # # create word cloud from entire dataset and from top features in LR
-    # plot_word_clouds()
+    plot_word_clouds()
     # # create plot for comparing different n-grams, and # of features in Multinomial Naive Bayes
 
 
