@@ -1,4 +1,12 @@
-import numpy as np
+"""
+File: Random_Forests.py
+Student 1: Bar Melinarskiy, student number: 2482975
+Student 2: Prathik Alex Matthai, student number: 9020675
+Student 3: Mohammed Bashabeeb, student number: 7060424
+Date: Oct 20, 2024
+Description: Assignment 2 - Implementation of Random Forests model
+"""
+
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
@@ -31,7 +39,6 @@ class RandomForestModel:
 
     def __init__(self):
         self.model = None
-        # self.selected_features_indices = None
 
     def train(self, X_train, y_train, max_depth=[3, 5, 7, 10], n_estimators=[50, 100, 200], cv=5, n_features=[10, 50, 100]):
         """
@@ -56,13 +63,6 @@ class RandomForestModel:
         --------
         The parameters of the best model
         """
-        # Perform feature selection
-        # if k == X_train.shape[1]:
-        #     X_train_post_feature_selec = X_train
-        #     self.selected_features_indices = range(X_train_post_feature_selec.shape[1])
-        # else:
-        #     X_train_post_feature_selec, self.selected_features_indices = utils.get_top_features(X_train, y_train, k)
-        
         # Define parameter grid
         param_grid = {'max_depth': max_depth, 'n_estimators': n_estimators, 'max_features': n_features,
                       'criterion': ['gini', 'entropy']}

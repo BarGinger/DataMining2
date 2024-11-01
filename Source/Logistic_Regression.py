@@ -1,4 +1,12 @@
-from sklearn.linear_model import LogisticRegression
+"""
+File: Logistic_Regression.py
+Student 1: Bar Melinarskiy, student number: 2482975
+Student 2: Prathik Alex Matthai, student number: 9020675
+Student 3: Mohammed Bashabeeb, student number: 7060424
+Date: Oct 20, 2024
+Description: Assignment 2 - Implementation of Logistic Regression model
+"""
+
 from sklearn.linear_model import LogisticRegressionCV
 import numpy as np
 import pandas as pd

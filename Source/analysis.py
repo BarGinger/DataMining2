@@ -11,8 +11,6 @@ from fileinput import filename
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from nltk.corpus import framenet
-from scipy.optimize import differential_evolution
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from wordcloud import WordCloud
@@ -89,7 +87,7 @@ def create_word_cloud(words: str, filename: str, title: str, colored_word=None, 
 
 def plot_word_clouds():
     """
-    Plot word cloud on entire fake reviews text, and on top 5 words from the different models.
+    Plot word cloud on entire fake reviews text, and on top 5 words from all the best logistic regression we trained.
     """
     # Load dataset
     df = get_df()
@@ -128,7 +126,18 @@ def plot_word_clouds():
 
 def plot_confusion_matrix(y_true, y_pred, title):
     """
-    Plot word cloud on entire fake reviews text, and on top 5 words from the different models
+    Plot confusion matrix for given model
+    Parameters:
+    -----------
+    y_true : list
+        array of true labels
+    y_pred : list
+        array of predicted labels
+    title : str
+        title for figure, also used in exported file name
+    Returns:
+    --------
+    None
     """
     confusion_matrix_data = confusion_matrix(y_true=y_true, y_pred=y_pred)
     cm_len = len(confusion_matrix_data)
@@ -144,7 +153,7 @@ def plot_confusion_matrix(y_true, y_pred, title):
     sns.heatmap(df_cm, annot=labels, fmt='', cmap='Blues', cbar=False,
                 annot_kws={"size": 14, "fontweight": "bold"})  # Adjust font properties
     plt.title(title, fontsize=16, fontweight='bold')  # Make title bold and larger
-    file_name = f"Output/{title}_confusion_matrix.png"
+    file_name = f"../Output/{title}_confusion_matrix.png"
     plt.savefig(file_name, dpi=800)
     plt.show()
 

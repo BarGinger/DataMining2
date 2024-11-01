@@ -1,4 +1,12 @@
-import numpy as np
+"""
+File: Classification_Trees.py
+Student 1: Bar Melinarskiy, student number: 2482975
+Student 2: Prathik Alex Matthai, student number: 9020675
+Student 3: Mohammed Bashabeeb, student number: 7060424
+Date: Oct 20, 2024
+Description: Assignment 2 - Implementation of classification tree model
+"""
+
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import GridSearchCV
@@ -36,7 +44,7 @@ class DecisionTreeModel:
 
     def train(self, X_train, y_train, max_depth=[3, 5, 7, 10], cv=5, max_features=[10, 100, 500]):
         """
-        Trains the Multinomial Naive Bayes model using cross-validation to find the best alpha.
+        Trains the Decision Tree Classifier model using cross-validation to find the best hyperparameters values.
 
         Parameters:
         -----------
@@ -56,8 +64,7 @@ class DecisionTreeModel:
         --------
         None
         """
-        # Train the Multinomial Naive Bayes model using cross-validation to find the best alpha
-        param_grid = {'max_depth': max_depth, 'max_features': max_features}  # Cross-validate over different alpha values
+        param_grid = {'max_depth': max_depth, 'max_features': max_features}
         grid = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=cv, scoring='accuracy')
         grid.fit(X_train, y_train)
 

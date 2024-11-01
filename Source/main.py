@@ -454,8 +454,7 @@ def compare_all_models(datasets_dict, model_preds, output_dir='../Output'):
 if __name__ == "__main__":
     # Uncomment to preprocess data before running models, we only need to run this once
     # preprocess()
-
-    # get dataset
+    # fetch the df from csv to check it
     # d = get_datasets()
 
     # train the models and retrieve scores
