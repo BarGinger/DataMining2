@@ -6,9 +6,7 @@ Student 3: Mohammed Bashabeeb, student number: 7060424
 Date: September 12, 2024
 Description: Assignment 2 - Classification for the Detection of Opinion Spam
 """
-from operator import index
 
-import spacy
 from tabulate import tabulate
 import nltk
 from mlxtend.evaluate import mcnemar, mcnemar_table
@@ -211,7 +209,7 @@ def read_zip(zip_file_path: str) -> pd.DataFrame:
 
 def preprocess():
     """
-    Read the data from a zip file and preprocess it, saving the results to a CSV file.
+    Read the data from a zip file and preprocess it, saving the results to a CSV file to save time in training.
 
     Returns:
     -------
@@ -250,7 +248,7 @@ def get_datasets():
 
     train_bigrams = X_bigrams[train_indices]
     test_bigrams = X_bigrams[test_indices]
-
+    # train, test set fo the combined uni-bi gram option
     train_both = X_both[train_indices]
     test_both = X_both[test_indices]
 
@@ -379,10 +377,7 @@ def mcnemar_test(contingency_matrix):
 
 
 
-# Function to compare all four models in pairs using McNemar's test
-import pandas as pd
-
-def compare_all_models(datasets_dict, model_preds):
+def compare_all_models(datasets_dict, model_preds, output_dir='../Output'):
     """
     Compare four models pairwise using McNemar's test.
 
@@ -392,6 +387,8 @@ def compare_all_models(datasets_dict, model_preds):
         Dictionary of the different datasets used in this program.
     model_preds : dict
         A dictionary with model names as keys and their respective predictions as values.
+    output_dir : str
+        Directory to save the output CSV files.
 
     Returns:
     --------
@@ -400,6 +397,7 @@ def compare_all_models(datasets_dict, model_preds):
     """
     model_names = list(model_preds.keys())
     results = []
+    contingency_matrices = []
     alpha = 0.05  # significance level
 
     # Assuming 'unigrams' dataset and index [3] for true labels
@@ -414,8 +412,17 @@ def compare_all_models(datasets_dict, model_preds):
             cm = get_contingency_matrix(true_labels, model_preds[model1], model_preds[model2])
             chi2_stat, p_val = mcnemar_test(cm)
 
-            # Interpret the result
+            # Append the contingency matrix to the list
+            contingency_matrices.append({
+                'Model 1': model1,
+                'Model 2': model2,
+                'True Positives': cm[0, 0],
+                'False Positives': cm[0, 1],
+                'False Negatives': cm[1, 0],
+                'True Negatives': cm[1, 1],
+            })
 
+            # Interpret the result
             if p_val < alpha:
                 print(f"p-value = {p_val:.4f}, which is less than {alpha}.")
                 print(f"We reject the null hypothesis (H₀). {model1} and {model2} have significantly different accuracies.")
@@ -433,9 +440,14 @@ def compare_all_models(datasets_dict, model_preds):
                 'reject': p_val < alpha
             })
 
+    # Convert contingency matrices to a DataFrame
+    contingency_df = pd.DataFrame(contingency_matrices)
+    contingency_df.to_csv(f"{output_dir}/combined_contingency_matrices.csv", index=False)
+    print(f"Combined contingency matrices saved to {output_dir}/combined_contingency_matrices.csv")
+
     # Convert results to a DataFrame
     df_statistical_analysis = pd.DataFrame(results)
-    df_statistical_analysis.to_csv(STATISTICAL_ANALYSIS_FILENAME, index=False)
+    df_statistical_analysis.to_csv(f"{output_dir}/statistical_analysis.csv", index=False)
     return df_statistical_analysis
 
 

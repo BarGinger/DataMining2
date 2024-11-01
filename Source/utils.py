@@ -9,7 +9,6 @@ Description: Assignment 2 - Utilizes functions for the entire project
 
 import pandas as pd
 import numpy as np
-from nltk import ngrams
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.feature_extraction.text import CountVectorizer
