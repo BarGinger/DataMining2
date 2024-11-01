@@ -376,6 +376,42 @@ def mcnemar_test(contingency_matrix):
     return chi2_stat, p_value
 
 
+import pandas as pd
+
+def create_summary_table(contingency_df):
+    """
+    Creates a summary table with key metrics from the contingency_df DataFrame.
+
+    Parameters:
+    -----------
+    contingency_df : pd.DataFrame
+        DataFrame containing the contingency matrix values for each pair of models.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A summary DataFrame with aggregated performance metrics.
+    """
+    summary = pd.DataFrame()
+
+    for idx, row in contingency_df.iterrows():
+        metrics = {
+            'Model 1': row['Model 1'],
+            'Model 2': row['Model 2'],
+            'True Positives': row['True Positives'],
+            'False Positives': row['False Positives'],
+            'False Negatives': row['False Negatives'],
+            'True Negatives': row['True Negatives'],
+            'Sensitivity (Recall)': row['True Positives'] / (row['True Positives'] + row['False Negatives']),
+            'Specificity': row['True Negatives'] / (row['True Negatives'] + row['False Positives']),
+            'Accuracy': (row['True Positives'] + row['True Negatives']) / sum(row[1:5])
+        }
+        summary = summary.append(metrics, ignore_index=True)
+
+    summary.to_csv('../Output/contingency_summary.csv', index=False)
+    print("Summary table saved to 'contingency_summary.csv'.")
+    return summary
+
 
 def compare_all_models(datasets_dict, model_preds, output_dir='../Output'):
     """
@@ -444,6 +480,8 @@ def compare_all_models(datasets_dict, model_preds, output_dir='../Output'):
     contingency_df = pd.DataFrame(contingency_matrices)
     contingency_df.to_csv(f"{output_dir}/combined_contingency_matrices.csv", index=False)
     print(f"Combined contingency matrices saved to {output_dir}/combined_contingency_matrices.csv")
+    summary_table = create_summary_table(contingency_df)
+    print(summary_table)
 
     # Convert results to a DataFrame
     df_statistical_analysis = pd.DataFrame(results)
